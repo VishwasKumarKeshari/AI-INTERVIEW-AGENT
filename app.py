@@ -50,7 +50,12 @@ def _run_main_page() -> None:
         raw, cleaned = parse_resume_file(uploaded_file.name, uploaded_file.read())
         state["resume_raw"] = raw
         state["resume_cleaned"] = cleaned
-        roles = extract_roles_from_resume(cleaned)
+        try:
+            roles = extract_roles_from_resume(cleaned)
+        except Exception as e:
+            st.error("Role extraction failed. Check GROQ_API_KEY and LLM_MODEL in your environment/secrets.")
+            st.exception(e)
+            return
         state["roles"] = roles
         st.success("Resume analyzed and roles extracted.")
 

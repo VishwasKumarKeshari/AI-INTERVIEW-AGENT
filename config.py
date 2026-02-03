@@ -17,8 +17,8 @@ LLMProvider = Literal["groq"]
 class LLMConfig:
     # Provider is fixed to Groq; no fallback to OpenAI or Ollama.
     provider: LLMProvider = "groq"
-    # Default to a sensible Groq model; can be overridden via env.
-    model: str = os.getenv("LLM_MODEL", "llama-3.1-70b-versatile")
+    # Default to a widely-available Groq model; can be overridden via env.
+    model: str = os.getenv("LLM_MODEL", "llama3-70b-8192")
     temperature: float = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
 
