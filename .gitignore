@@ -1,0 +1,38 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Environment / secrets
+.env
+*.env
+
+# IDE and editor settings
+.vscode/
+.idea/
+.cursor/
+
+# Streamlit
+.streamlit/
+
+# Logs
+*.log
+
+# Vector database / embeddings
+vector_store/chroma_db/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
