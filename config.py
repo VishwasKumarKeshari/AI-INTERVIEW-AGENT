@@ -2,14 +2,23 @@ import os
 from dataclasses import dataclass
 from typing import Literal
 
+from dotenv import load_dotenv
 
-LLMProvider = Literal["openai", "groq", "ollama"]
+
+# Load environment variables from .env at import time so that
+# GROQ_API_KEY, LLM_MODEL, etc. are available everywhere.
+load_dotenv()
+
+
+LLMProvider = Literal["groq"]
 
 
 @dataclass
 class LLMConfig:
-    provider: LLMProvider = os.getenv("LLM_PROVIDER", "openai")  # type: ignore[assignment]
-    model: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
+    # Provider is fixed to Groq; no fallback to OpenAI or Ollama.
+    provider: LLMProvider = "groq"
+    # Default to a sensible Groq model; can be overridden via env.
+    model: str = os.getenv("LLM_MODEL", "llama-3.1-70b-versatile")
     temperature: float = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
 
