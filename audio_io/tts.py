@@ -40,3 +40,21 @@ def speak_text(text: str) -> None:
         _engine.say(text)
         _engine.runAndWait()
 
+
+def speak_text_async(text: str) -> None:
+    """
+    Speak text in a background thread so the UI does not block.
+    Use this when the interviewer reads questions aloud.
+    """
+    if not text.strip():
+        return
+
+    def _speak():
+        try:
+            speak_text(text)
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=_speak, daemon=True)
+    thread.start()
+

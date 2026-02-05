@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+from streamlit_webrtc import webrtc_streamer
 
 from resume_parser import parse_resume_file
 from role_extractor import extract_roles_from_resume
@@ -14,26 +15,46 @@ from interview_engine import InterviewSession
 from evaluation_engine import AnswerEvaluator
 from report_generator import generate_report
 from vector_store import InterviewVectorStore
-from audio_io import transcribe_audio_file, speak_text
+from audio_io import transcribe_audio_file, speak_text, speak_text_async
+from audio_io.realtime_vad import get_vad_state, create_audio_frame_callback
 
 
-def _auto_advance_question(
+def _submit_answer_from_voice_or_auto(
     state: Dict[str, Any],
     session: InterviewSession,
+    evaluator: AnswerEvaluator,
     current_question,
+    answer_text: str,
 ) -> None:
-    """Record no answer (score 0) and move to next question."""
-    session.record_answer_evaluation(
-        question_id=current_question.id,
-        answer_text="(No answer - time expired)",
-        score=0,
-        reasoning="No answer provided within the time limit.",
-        strengths=[],
-        weaknesses=["No response submitted"],
-    )
+    """Evaluate answer (from voice or auto-timeout) and advance to next question."""
+    if "(No answer" in answer_text or not answer_text.strip():
+        session.record_answer_evaluation(
+            question_id=current_question.id,
+            answer_text="(No answer - time expired)",
+            score=0,
+            reasoning="No answer provided within the time limit.",
+            strengths=[],
+            weaknesses=["No response submitted"],
+        )
+    else:
+        eval_result = evaluator.evaluate_answer(
+            role_name=current_question.role,
+            question=current_question.question,
+            ideal_answer=current_question.ideal_answer,
+            expected_concepts=current_question.expected_concepts,
+            candidate_answer=answer_text,
+        )
+        session.record_answer_evaluation(
+            question_id=current_question.id,
+            answer_text=answer_text,
+            score=int(eval_result["score"]),
+            reasoning=str(eval_result["reasoning"]),
+            strengths=list(eval_result["strengths"]),
+            weaknesses=list(eval_result["weaknesses"]),
+        )
     if session.has_more_questions():
         state["current_question"] = session.get_next_question()
-        state["question_start_time"] = time.time()
+        get_vad_state().reset_for_new_question()
         st.session_state["answer_text_area"] = ""
     else:
         state["current_question"] = None
@@ -59,6 +80,8 @@ def _init_interview() -> None:
     state["interview_phase"] = "intro"  # intro -> warmup -> technical
     state["current_question"] = None
     state["interview_completed"] = False
+    state["intro_spoken"] = False
+    state["last_spoken_question_id"] = None
 
 
 def _run_main_page() -> None:
@@ -105,39 +128,79 @@ def _run_main_page() -> None:
         # --- Phase 1: Introduction ---
         if phase == "intro":
             role_names = ", ".join(r.name for r in session.roles)
+            intro_msg = (
+                f"Hello! I'm your AI Interview Agent. "
+                f"I'll be conducting your technical interview today for the role(s): {role_names}. "
+                f"We'll start with a quick introduction, then move on to technical questions. "
+                f"Speak into your mic—the 10-second timer starts only when you stop talking. "
+                f"Let's begin!"
+            )
+            if not state.get("intro_spoken"):
+                state["intro_spoken"] = True
+                speak_text_async(intro_msg)
             st.info(
                 f"**Hello! I'm your AI Interview Agent.**\n\n"
                 f"I'll be conducting your technical interview today for the role(s): **{role_names}**.\n\n"
                 f"We'll start with a quick introduction, then move on to {9 if len(session.roles) == 1 else 9} technical questions. "
-                f"You have about **10 seconds per question**—feel free to type or upload an audio response.\n\n"
+                f"**Speak into your mic**—the 10-second timer starts only **when you stop talking**. You can also type your answer.\n\n"
                 f"Let's begin!"
             )
             if st.button("Let's begin"):
                 state["interview_phase"] = "questions"
                 state["current_question"] = session.get_next_question()
-                state["question_start_time"] = time.time()
+                vad = get_vad_state()
+                vad.reset_for_new_question()
                 st.rerun()
 
         # --- Phase 2 & 3: Questions (warmup + technical) ---
         elif phase == "questions" and not state.get("interview_completed", False):
-            # Auto-advance after 10 seconds if no answer submitted
-            question_start = state.get("question_start_time")
-            if question_start and (time.time() - question_start) >= 10 and current_question:
-                _auto_advance_question(state, session, current_question)
+            vad = get_vad_state()
+            # VAD-based: 10 sec timer starts only when candidate STOPS speaking
+            triggered, audio_path = vad.pop_triggered_and_audio_path()
+            if triggered and current_question:
+                transcript = ""
+                if audio_path:
+                    try:
+                        transcript = transcribe_audio_file(audio_path).strip()
+                        os.remove(audio_path)
+                    except Exception:
+                        pass
+                _submit_answer_from_voice_or_auto(
+                    state, session, evaluator, current_question,
+                    transcript if transcript else "(No answer - time expired)",
+                )
                 st.rerun()
 
             if state.get("interview_completed", False):
                 pass  # Fall through to results
             elif current_question:
+                # Speak the question aloud when first shown (once per question)
+                last_spoken = state.get("last_spoken_question_id")
+                if last_spoken != current_question.id:
+                    state["last_spoken_question_id"] = current_question.id
+                    speak_text_async(current_question.question)
+
                 st.markdown(f"**Role:** {current_question.role}")
                 st.markdown(f"**Question:** {current_question.question}")
-                elapsed = int(time.time() - state.get("question_start_time", time.time()))
-                st.caption(f"Time: {elapsed}s / 10s (auto-advances in {max(0, 10 - elapsed)}s)")
 
+                silence_sec = vad.get_silence_seconds()
+                if vad.is_speaking() or silence_sec < 0.5:
+                    st.caption("🎤 **Speaking...** (Timer starts when you stop talking)")
+                else:
+                    st.caption(f"⏱️ **Silence:** {int(silence_sec)}s / 10s (auto-advances when you stay silent 10 sec)")
+
+                st.markdown("**Answer by voice (real-time)** — speak into your mic. The 10s timer starts only when you stop.")
+                webrtc_streamer(
+                    key=f"interview_mic_{current_question.id}",
+                    audio_frame_callback=create_audio_frame_callback(),
+                    media_stream_constraints={"video": False, "audio": True},
+                )
+
+                st.markdown("**Or type your answer:**")
                 answer_text = st.text_area("Your answer (text)", key="answer_text_area")
 
-                audio_file = st.file_uploader("Or upload an audio answer (wav/mp3/m4a)", type=["wav", "mp3", "m4a"])
-                if st.button("Transcribe Audio") and audio_file is not None:
+                audio_file = st.file_uploader("Or upload an audio file (wav/mp3/m4a)", type=["wav", "mp3", "m4a"])
+                if st.button("Transcribe Audio File") and audio_file is not None:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
                         tmp.write(audio_file.read())
                         tmp_path = tmp.name
@@ -151,38 +214,14 @@ def _run_main_page() -> None:
                     if not final_answer:
                         st.error("Please provide an answer before submitting.")
                     else:
-                        eval_result = evaluator.evaluate_answer(
-                            role_name=current_question.role,
-                            question=current_question.question,
-                            ideal_answer=current_question.ideal_answer,
-                            expected_concepts=current_question.expected_concepts,
-                            candidate_answer=final_answer,
+                        _submit_answer_from_voice_or_auto(
+                            state, session, evaluator, current_question, final_answer
                         )
-                        session.record_answer_evaluation(
-                            question_id=current_question.id,
-                            answer_text=final_answer,
-                            score=int(eval_result["score"]),
-                            reasoning=str(eval_result["reasoning"]),
-                            strengths=list(eval_result["strengths"]),
-                            weaknesses=list(eval_result["weaknesses"]),
-                        )
-                        st.success(f"Answer scored: {eval_result['score']} / 2")
-                        with st.expander("Evaluation details"):
-                            st.write(eval_result["reasoning"])
-                            st.write("Strengths:", eval_result["strengths"])
-                            st.write("Weaknesses:", eval_result["weaknesses"])
-
-                        if session.has_more_questions():
-                            state["current_question"] = session.get_next_question()
-                            state["question_start_time"] = time.time()
-                            st.session_state["answer_text_area"] = ""
-                        else:
-                            state["current_question"] = None
-                            state["interview_completed"] = True
+                        st.success("Answer submitted and scored.")
                         st.rerun()
 
-                # Auto-refresh every 2 seconds to check 10s elapsed
-                st_autorefresh(interval=2000, key="question_timer")
+                # Poll every 1.5s to check if VAD detected 10s silence
+                st_autorefresh(interval=1500, key="question_timer")
             else:
                 state["interview_completed"] = True
                 st.rerun()
