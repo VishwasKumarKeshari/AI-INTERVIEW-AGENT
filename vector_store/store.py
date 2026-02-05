@@ -89,8 +89,26 @@ class InterviewVectorStore:
             where={"role": role},
         )
 
+        # Fallback: if role has no questions (e.g. "General Technical Candidate"),
+        # try other roles so the interview can proceed.
+        display_role = role
+        if not results.get("ids") or not results["ids"][0]:
+            fallback_roles = ["Backend Engineer", "Data Scientist", "ML Engineer"]
+            for fb_role in fallback_roles:
+                if fb_role == role:
+                    continue
+                results = self._collection.query(
+                    query_embeddings=[query_embedding],
+                    n_results=n + len(exclude_ids),
+                    where={"role": fb_role},
+                )
+                if results.get("ids") and results["ids"][0]:
+                    display_role = role  # Keep original role for display/reporting
+                    break
+
         records: List[QuestionRecord] = []
-        for idx, qid in enumerate(results.get("ids", [[]])[0]):
+        ids_list = results.get("ids", [[]])[0] or []
+        for idx, qid in enumerate(ids_list):
             if qid in exclude_ids:
                 continue
             doc = results["documents"][0][idx]
@@ -107,7 +125,7 @@ class InterviewVectorStore:
                 QuestionRecord(
                     id=qid,
                     question=doc,
-                    role=meta["role"],
+                    role=display_role,
                     difficulty=meta["difficulty"],
                     ideal_answer=meta["ideal_answer"],
                     expected_concepts=expected_concepts,

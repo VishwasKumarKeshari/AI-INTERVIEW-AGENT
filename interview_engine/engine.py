@@ -32,11 +32,12 @@ class InterviewSession:
         self.roles = roles[:2]
         self.store = store or InterviewVectorStore()
 
+        # 1 warmup + 9 technical = 10 total. For 2 roles: 1 warmup + 4+5 technical.
         if len(self.roles) == 1:
-            self.questions_per_role = {self.roles[0].name: 10}
+            self.questions_per_role = {self.roles[0].name: 9}
         else:
             self.questions_per_role = {
-                self.roles[0].name: 5,
+                self.roles[0].name: 4,
                 self.roles[1].name: 5,
             }
 
@@ -44,6 +45,15 @@ class InterviewSession:
         self.current_role_index: int = 0
         self.asked_question_ids: List[str] = []
         self.questions_by_role: Dict[str, List[QuestionWithEvaluation]] = {r: [] for r in self.role_order}
+        self.warmup_done: bool = False
+        self._warmup_record: QuestionRecord = QuestionRecord(
+            id="warmup_1",
+            question="Tell me about yourself. What interests you about this role?",
+            role=self.role_order[0],
+            difficulty="easy",
+            ideal_answer="A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
+            expected_concepts=["self-introduction", "motivation", "background", "experience"],
+        )
 
     def _current_role_name(self) -> str:
         return self.role_order[self.current_role_index]
@@ -56,9 +66,17 @@ class InterviewSession:
 
     def get_next_question(self) -> Optional[QuestionRecord]:
         """
-        Retrieve the next question for the current role, switching roles once
-        the quota for the current role is satisfied.
+        Retrieve the next question: first returns warmup, then technical questions
+        from the vector store for the current role.
         """
+        # First question is always the warmup.
+        if not self.warmup_done:
+            self.warmup_done = True
+            self.questions_by_role[self.role_order[0]].append(
+                QuestionWithEvaluation(question=self._warmup_record)
+            )
+            return self._warmup_record
+
         if not self.has_more_questions():
             return None
 
