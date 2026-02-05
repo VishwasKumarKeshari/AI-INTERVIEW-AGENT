@@ -160,7 +160,11 @@ def create_audio_frame_callback():
         samples = frame.to_ndarray()
         if samples.size > 0:
             if len(samples.shape) > 1:
-                samples = samples.mean(axis=1)
+                # Audio frames may be (channels, samples) or (samples, channels)
+                if samples.shape[0] <= 2 and samples.shape[1] > samples.shape[0]:
+                    samples = samples.mean(axis=0)
+                else:
+                    samples = samples.mean(axis=1)
             if samples.dtype == np.int16:
                 samples = samples.astype(np.float32) / 32768.0
             state.process_frame(samples, getattr(frame, "sample_rate", 16000))
