@@ -143,7 +143,14 @@ class InterviewSession:
             exclude_ids=self.asked_question_ids,
         )
         if not fetched:
-            return None
+            # Fallback: allow repeats if the pool is exhausted.
+            fetched = self.store.get_questions_for_role(
+                role=role_name,
+                n=1,
+                exclude_ids=None,
+            )
+            if not fetched:
+                return None
 
         question = self._select_question_with_llm(role_name, fetched)
         self.asked_question_ids.append(question.id)

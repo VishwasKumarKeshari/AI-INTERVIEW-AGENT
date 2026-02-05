@@ -56,9 +56,11 @@ def _submit_answer_from_voice_or_auto(
     if session.has_more_questions():
         state["current_question"] = session.get_next_question()
         get_vad_state().reset_for_new_question()
+        state["question_started_at"] = time.time()
     else:
         state["current_question"] = None
         state["interview_completed"] = True
+        state["question_started_at"] = None
 
 
 def _init_answer_log(state: Dict[str, Any]) -> None:
@@ -142,6 +144,7 @@ def _init_interview() -> None:
     state["outro_spoken"] = False
     _init_answer_log(state)
     get_vad_state().reset_for_new_question()
+    state["question_started_at"] = time.time()
 
 
 def _run_main_page() -> None:
@@ -188,10 +191,15 @@ def _run_main_page() -> None:
         # --- Questions (warmup + technical) ---
         if phase == "questions" and not state.get("interview_completed", False):
             vad = get_vad_state()
-            # Voice-based: 60s answer window
-            if vad.get_elapsed_seconds() >= 60:
-                vad.force_trigger()
-            triggered, audio_path = vad.pop_triggered_and_audio_path()
+            if state.get("question_started_at") is None:
+                state["question_started_at"] = time.time()
+            elapsed_sec = time.time() - float(state.get("question_started_at") or time.time())
+            # Voice-based: 60s answer window (hard timer)
+            if elapsed_sec >= 60:
+                triggered = True
+                audio_path = vad.finalize_audio_path()
+            else:
+                triggered, audio_path = vad.pop_triggered_and_audio_path()
             if triggered and current_question:
                 transcript = ""
                 if audio_path:
@@ -216,7 +224,7 @@ def _run_main_page() -> None:
                 pass  # Fall through to results
             elif current_question:
                 st.caption(
-                    f"Debug | qid: {current_question.id} | elapsed: {vad.get_elapsed_seconds():.1f}s | "
+                    f"Debug | qid: {current_question.id} | elapsed: {elapsed_sec:.1f}s | "
                     f"triggered: {triggered} | asked: {len(session.asked_question_ids)}"
                 )
                 if not state.get("intro_spoken"):
@@ -246,7 +254,7 @@ def _run_main_page() -> None:
                 st.markdown(f"**Role:** {current_question.role}")
                 st.markdown(f"**Question:** {current_question.question}")
 
-                elapsed_sec = vad.get_elapsed_seconds()
+                elapsed_sec = time.time() - float(state.get("question_started_at") or time.time())
                 remaining = max(0, 60 - int(elapsed_sec))
                 rms_level = vad.get_last_rms()
                 if vad.is_speaking():
@@ -264,6 +272,12 @@ def _run_main_page() -> None:
                 # Poll every 1s to check if VAD reached the 60s limit
                 st_autorefresh(interval=1000, key="question_timer")
             else:
+                if session.has_more_questions():
+                    st.error(
+                        "No more questions available in the vector store. "
+                        "Please seed the vector store with more questions."
+                    )
+                    st.stop()
                 state["interview_completed"] = True
                 st.rerun()
 

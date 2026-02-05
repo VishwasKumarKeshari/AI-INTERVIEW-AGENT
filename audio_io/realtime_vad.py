@@ -82,17 +82,7 @@ class RealtimeVADState:
             path: Optional[str] = None
             if not triggered:
                 return False, None
-            if self.audio_frames and self.sample_rate > 0:
-                try:
-                    import soundfile as sf
-                    arr = np.concatenate(self.audio_frames)
-                    if arr.dtype != np.float32:
-                        arr = arr.astype(np.float32)
-                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-                        sf.write(f.name, arr, self.sample_rate)
-                        path = f.name
-                except Exception:
-                    path = None
+            path = self._write_audio_to_tempfile()
             self.silence_timeout_triggered = False
             self.audio_frames = []
             return True, path
@@ -117,6 +107,28 @@ class RealtimeVADState:
         """Latest RMS level for incoming audio frames."""
         with self._lock:
             return self._last_rms
+
+    def finalize_audio_path(self) -> Optional[str]:
+        """Write accumulated audio to a temp WAV and clear the buffer."""
+        with self._lock:
+            path = self._write_audio_to_tempfile()
+            self.silence_timeout_triggered = False
+            self.audio_frames = []
+            return path
+
+    def _write_audio_to_tempfile(self) -> Optional[str]:
+        if not self.audio_frames or self.sample_rate <= 0:
+            return None
+        try:
+            import soundfile as sf
+            arr = np.concatenate(self.audio_frames)
+            if arr.dtype != np.float32:
+                arr = arr.astype(np.float32)
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                sf.write(f.name, arr, self.sample_rate)
+                return f.name
+        except Exception:
+            return None
 
     def force_trigger(self) -> None:
         """Force the timeout trigger (used when UI timer hits limit)."""
