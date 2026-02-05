@@ -53,11 +53,12 @@ class RealtimeVADState:
                     return
             rms = np.sqrt(np.mean(samples.astype(np.float32) ** 2))
             is_speech = rms > SPEECH_THRESHOLD
+            # Always retain audio frames during the answer window for better transcription.
+            self.audio_frames.append(samples.copy())
 
             if is_speech:
                 self.last_speech_time = now
                 self._has_ever_spoken = True
-                self.audio_frames.append(samples.copy())
             else:
                 if self._has_ever_spoken and self.last_speech_time is not None:
                     silence_duration = now - self.last_speech_time

@@ -105,6 +105,19 @@ def _append_answer_log(
         json.dump(payload, f, indent=2)
 
 
+def _write_evaluation_json(state: Dict[str, Any], session: InterviewSession) -> None:
+    if state.get("evaluation_saved"):
+        return
+    log_path = state.get("answer_log_path")
+    if not log_path:
+        return
+    eval_path = log_path.replace("interview_answers_", "interview_evaluation_")
+    data = session.to_serializable()
+    with open(eval_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    state["evaluation_saved"] = True
+
+
 def _get_session() -> Dict[str, Any]:
     if "state" not in st.session_state:
         st.session_state.state = {}
@@ -127,6 +140,7 @@ def _init_interview() -> None:
     state["intro_spoken"] = False
     state["last_spoken_question_id"] = None
     state["outro_spoken"] = False
+    state["intro_completed"] = False
     _init_answer_log(state)
 
 
@@ -160,7 +174,7 @@ def _run_main_page() -> None:
             st.markdown(f"**Role {idx}: {r.name}** (confidence: {r.confidence:.2f})")
             st.caption(r.rationale)
 
-    if "roles" in state and st.button("Start Interview"):
+    if "roles" in state and "interview_session" not in state:
         _init_interview()
 
     if "interview_session" in state:
@@ -191,7 +205,8 @@ def _run_main_page() -> None:
                 f"**Speak into your mic**—you have **60 seconds** for each answer.\n\n"
                 f"Let's begin!"
             )
-            if st.button("Let's begin"):
+            if not state.get("intro_completed"):
+                state["intro_completed"] = True
                 state["interview_phase"] = "questions"
                 state["current_question"] = session.get_next_question()
                 vad = get_vad_state()
@@ -260,6 +275,7 @@ def _run_main_page() -> None:
             if not state.get("outro_spoken"):
                 state["outro_spoken"] = True
                 speak_text_async("Thank you for your time. The interview is now complete.")
+            _write_evaluation_json(state, session)
             st.subheader("4. Results")
             interview_state = session.to_serializable()
             evaluator: AnswerEvaluator = state["evaluator"]
