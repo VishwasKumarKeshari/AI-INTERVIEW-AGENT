@@ -133,6 +133,9 @@ def _init_interview() -> None:
         st.error("No roles detected. Please upload and analyze a resume first.")
         return
     store = InterviewVectorStore()
+    seeded = store.seed_if_empty()
+    if seeded:
+        st.info("Vector store was empty — seeded with sample questions.")
     session = InterviewSession(roles=roles, store=store)
     state["interview_session"] = session
     state["evaluator"] = AnswerEvaluator()

@@ -67,6 +67,26 @@ class InterviewVectorStore:
             embeddings=embeddings,
         )
 
+    def count(self) -> int:
+        return int(self._collection.count())
+
+    def seed_if_empty(self) -> bool:
+        """
+        Seed the vector store with sample questions if it's empty.
+        Returns True if seeding occurred.
+        """
+        if self.count() > 0:
+            return False
+        try:
+            from .init_vector_store import build_sample_questions
+            questions = build_sample_questions()
+            if questions:
+                self.add_questions(questions)
+                return True
+        except Exception:
+            return False
+        return False
+
     def get_questions_for_role(
         self,
         role: str,
