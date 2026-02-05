@@ -256,7 +256,7 @@ def _run_main_page() -> None:
 
                 st.markdown("**Answer by voice (real-time)** — speak into your mic. You have 60 seconds per question.")
                 webrtc_streamer(
-                    key=f"interview_mic_{current_question.id}",
+                    key="interview_mic",
                     audio_frame_callback=create_audio_frame_callback(),
                     media_stream_constraints={"video": False, "audio": True},
                 )
