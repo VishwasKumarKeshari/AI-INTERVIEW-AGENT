@@ -30,6 +30,7 @@ class RealtimeVADState:
         self.audio_frames: List[np.ndarray] = []
         self.sample_rate: int = 16000
         self._has_ever_spoken: bool = False
+        self._last_rms: float = 0.0
 
     def reset_for_new_question(self) -> None:
         with self._lock:
@@ -53,6 +54,7 @@ class RealtimeVADState:
                     return
             rms = np.sqrt(np.mean(samples.astype(np.float32) ** 2))
             is_speech = rms > SPEECH_THRESHOLD
+            self._last_rms = float(rms)
             # Always retain audio frames during the answer window for better transcription.
             self.audio_frames.append(samples.copy())
 
@@ -110,6 +112,16 @@ class RealtimeVADState:
             if self.question_start_time is None:
                 return 0.0
             return time.time() - self.question_start_time
+
+    def get_last_rms(self) -> float:
+        """Latest RMS level for incoming audio frames."""
+        with self._lock:
+            return self._last_rms
+
+    def force_trigger(self) -> None:
+        """Force the timeout trigger (used when UI timer hits limit)."""
+        with self._lock:
+            self.silence_timeout_triggered = True
 
     def is_speaking(self) -> bool:
         """True if candidate spoke in the last 2 seconds (brief pause still counts as speaking)."""

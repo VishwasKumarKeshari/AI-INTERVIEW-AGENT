@@ -217,6 +217,8 @@ def _run_main_page() -> None:
         elif phase == "questions" and not state.get("interview_completed", False):
             vad = get_vad_state()
             # Voice-based: 60s answer window
+            if vad.get_elapsed_seconds() >= 60:
+                vad.force_trigger()
             triggered, audio_path = vad.pop_triggered_and_audio_path()
             if triggered and current_question:
                 transcript = ""
@@ -252,10 +254,11 @@ def _run_main_page() -> None:
 
                 elapsed_sec = vad.get_elapsed_seconds()
                 remaining = max(0, 60 - int(elapsed_sec))
+                rms_level = vad.get_last_rms()
                 if vad.is_speaking():
-                    st.caption("Speaking... (You have up to 60 seconds total)")
+                    st.caption(f"Speaking... (You have up to 60 seconds total) | RMS: {rms_level:.4f}")
                 else:
-                    st.caption(f"Time remaining: {remaining}s / 60s")
+                    st.caption(f"Time remaining: {remaining}s / 60s | RMS: {rms_level:.4f}")
 
                 st.markdown("**Answer by voice (real-time)** — speak into your mic. You have 60 seconds per question.")
                 webrtc_streamer(
