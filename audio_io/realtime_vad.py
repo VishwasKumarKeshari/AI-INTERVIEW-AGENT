@@ -1,6 +1,6 @@
 """
 Real-time Voice Activity Detection (VAD) for interview answers.
-The 10-second silence timer starts only AFTER the candidate stops speaking.
+The answer window is capped at 60 seconds per question.
 """
 from __future__ import annotations
 
@@ -13,8 +13,9 @@ import numpy as np
 
 # Threshold below which audio is considered silence (RMS of normalized samples).
 SPEECH_THRESHOLD = 0.01
-SILENCE_TIMEOUT_SEC = 10
-NO_SPEECH_TIMEOUT_SEC = 30  # If candidate never speaks, advance after this.
+MAX_ANSWER_DURATION_SEC = 60
+SILENCE_TIMEOUT_SEC = MAX_ANSWER_DURATION_SEC
+NO_SPEECH_TIMEOUT_SEC = MAX_ANSWER_DURATION_SEC  # If candidate never speaks, advance after this.
 
 
 class RealtimeVADState:
@@ -45,6 +46,11 @@ class RealtimeVADState:
                 return
             now = time.time()
             self.sample_rate = sample_rate
+            if self.question_start_time is not None:
+                elapsed = now - self.question_start_time
+                if elapsed >= MAX_ANSWER_DURATION_SEC:
+                    self.silence_timeout_triggered = True
+                    return
             rms = np.sqrt(np.mean(samples.astype(np.float32) ** 2))
             is_speech = rms > SPEECH_THRESHOLD
 
@@ -71,6 +77,8 @@ class RealtimeVADState:
         with self._lock:
             triggered = self.silence_timeout_triggered
             path: Optional[str] = None
+            if not triggered:
+                return False, None
             if self.audio_frames and self.sample_rate > 0:
                 try:
                     import soundfile as sf
@@ -84,7 +92,7 @@ class RealtimeVADState:
                     path = None
             self.silence_timeout_triggered = False
             self.audio_frames = []
-            return triggered, path
+            return True, path
 
     def get_silence_seconds(self) -> float:
         """Seconds of continuous silence so far (0 if currently speaking)."""
@@ -94,6 +102,13 @@ class RealtimeVADState:
             if self.last_speech_time is None:
                 return 0.0
             return time.time() - self.last_speech_time
+
+    def get_elapsed_seconds(self) -> float:
+        """Seconds elapsed since the question started."""
+        with self._lock:
+            if self.question_start_time is None:
+                return 0.0
+            return time.time() - self.question_start_time
 
     def is_speaking(self) -> bool:
         """True if candidate spoke in the last 2 seconds (brief pause still counts as speaking)."""

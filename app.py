@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
-import tempfile
 import time
+from datetime import datetime
 from typing import Any, Dict, List
 
 import streamlit as st
@@ -55,10 +56,53 @@ def _submit_answer_from_voice_or_auto(
     if session.has_more_questions():
         state["current_question"] = session.get_next_question()
         get_vad_state().reset_for_new_question()
-        st.session_state["answer_text_area"] = ""
     else:
         state["current_question"] = None
         state["interview_completed"] = True
+
+
+def _init_answer_log(state: Dict[str, Any]) -> None:
+    os.makedirs("interview_logs", exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = os.path.join("interview_logs", f"interview_answers_{timestamp}.json")
+    roles = [r.name for r in state.get("roles", [])]
+    payload = {
+        "started_at": datetime.now().isoformat(),
+        "roles": roles,
+        "answers": [],
+    }
+    with open(log_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+    state["answer_log_path"] = log_path
+
+
+def _append_answer_log(
+    state: Dict[str, Any],
+    current_question,
+    answer_text: str,
+    was_timeout: bool,
+) -> None:
+    log_path = state.get("answer_log_path")
+    if not log_path:
+        return
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception:
+        payload = {"started_at": datetime.now().isoformat(), "roles": [], "answers": []}
+
+    payload["answers"].append(
+        {
+            "question_id": current_question.id,
+            "role": current_question.role,
+            "question": current_question.question,
+            "answer_text": answer_text,
+            "was_timeout": was_timeout,
+            "answered_at": datetime.now().isoformat(),
+        }
+    )
+    with open(log_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
 
 
 def _get_session() -> Dict[str, Any]:
@@ -82,6 +126,8 @@ def _init_interview() -> None:
     state["interview_completed"] = False
     state["intro_spoken"] = False
     state["last_spoken_question_id"] = None
+    state["outro_spoken"] = False
+    _init_answer_log(state)
 
 
 def _run_main_page() -> None:
@@ -132,7 +178,7 @@ def _run_main_page() -> None:
                 f"Hello! I'm your AI Interview Agent. "
                 f"I'll be conducting your technical interview today for the role(s): {role_names}. "
                 f"We'll start with a quick introduction, then move on to technical questions. "
-                f"Speak into your mic—the 10-second timer starts only when you stop talking. "
+                f"Speak into your mic—your answer window is 60 seconds. "
                 f"Let's begin!"
             )
             if not state.get("intro_spoken"):
@@ -142,7 +188,7 @@ def _run_main_page() -> None:
                 f"**Hello! I'm your AI Interview Agent.**\n\n"
                 f"I'll be conducting your technical interview today for the role(s): **{role_names}**.\n\n"
                 f"We'll start with a quick introduction, then move on to {9 if len(session.roles) == 1 else 9} technical questions. "
-                f"**Speak into your mic**—the 10-second timer starts only **when you stop talking**. You can also type your answer.\n\n"
+                f"**Speak into your mic**—you have **60 seconds** for each answer.\n\n"
                 f"Let's begin!"
             )
             if st.button("Let's begin"):
@@ -155,7 +201,7 @@ def _run_main_page() -> None:
         # --- Phase 2 & 3: Questions (warmup + technical) ---
         elif phase == "questions" and not state.get("interview_completed", False):
             vad = get_vad_state()
-            # VAD-based: 10 sec timer starts only when candidate STOPS speaking
+            # Voice-based: 60s answer window
             triggered, audio_path = vad.pop_triggered_and_audio_path()
             if triggered and current_question:
                 transcript = ""
@@ -165,6 +211,12 @@ def _run_main_page() -> None:
                         os.remove(audio_path)
                     except Exception:
                         pass
+                _append_answer_log(
+                    state,
+                    current_question,
+                    transcript if transcript else "(No answer - time expired)",
+                    was_timeout=not bool(transcript),
+                )
                 _submit_answer_from_voice_or_auto(
                     state, session, evaluator, current_question,
                     transcript if transcript else "(No answer - time expired)",
@@ -183,51 +235,31 @@ def _run_main_page() -> None:
                 st.markdown(f"**Role:** {current_question.role}")
                 st.markdown(f"**Question:** {current_question.question}")
 
-                silence_sec = vad.get_silence_seconds()
-                if vad.is_speaking() or silence_sec < 0.5:
-                    st.caption("🎤 **Speaking...** (Timer starts when you stop talking)")
+                elapsed_sec = vad.get_elapsed_seconds()
+                remaining = max(0, 60 - int(elapsed_sec))
+                if vad.is_speaking():
+                    st.caption("Speaking... (You have up to 60 seconds total)")
                 else:
-                    st.caption(f"⏱️ **Silence:** {int(silence_sec)}s / 10s (auto-advances when you stay silent 10 sec)")
+                    st.caption(f"Time remaining: {remaining}s / 60s")
 
-                st.markdown("**Answer by voice (real-time)** — speak into your mic. The 10s timer starts only when you stop.")
+                st.markdown("**Answer by voice (real-time)** — speak into your mic. You have 60 seconds per question.")
                 webrtc_streamer(
                     key=f"interview_mic_{current_question.id}",
                     audio_frame_callback=create_audio_frame_callback(),
                     media_stream_constraints={"video": False, "audio": True},
                 )
 
-                st.markdown("**Or type your answer:**")
-                answer_text = st.text_area("Your answer (text)", key="answer_text_area")
-
-                audio_file = st.file_uploader("Or upload an audio file (wav/mp3/m4a)", type=["wav", "mp3", "m4a"])
-                if st.button("Transcribe Audio File") and audio_file is not None:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-                        tmp.write(audio_file.read())
-                        tmp_path = tmp.name
-                    transcript = transcribe_audio_file(tmp_path)
-                    os.remove(tmp_path)
-                    st.session_state["answer_text_area"] = transcript
-                    st.success("Audio transcribed into the text field above.")
-
-                if st.button("Submit Answer"):
-                    final_answer = st.session_state.get("answer_text_area", "").strip()
-                    if not final_answer:
-                        st.error("Please provide an answer before submitting.")
-                    else:
-                        _submit_answer_from_voice_or_auto(
-                            state, session, evaluator, current_question, final_answer
-                        )
-                        st.success("Answer submitted and scored.")
-                        st.rerun()
-
-                # Poll every 1.5s to check if VAD detected 10s silence
-                st_autorefresh(interval=1500, key="question_timer")
+                # Poll every 1s to check if VAD reached the 60s limit
+                st_autorefresh(interval=1000, key="question_timer")
             else:
                 state["interview_completed"] = True
                 st.rerun()
 
         # --- Results ---
         if state.get("interview_completed", False):
+            if not state.get("outro_spoken"):
+                state["outro_spoken"] = True
+                speak_text_async("Thank you for your time. The interview is now complete.")
             st.subheader("4. Results")
             interview_state = session.to_serializable()
             evaluator: AnswerEvaluator = state["evaluator"]
