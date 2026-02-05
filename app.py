@@ -215,6 +215,10 @@ def _run_main_page() -> None:
             if state.get("interview_completed", False):
                 pass  # Fall through to results
             elif current_question:
+                st.caption(
+                    f"Debug | qid: {current_question.id} | elapsed: {vad.get_elapsed_seconds():.1f}s | "
+                    f"triggered: {triggered} | asked: {len(session.asked_question_ids)}"
+                )
                 if not state.get("intro_spoken"):
                     role_names = ", ".join(r.name for r in session.roles)
                     intro_msg = (
