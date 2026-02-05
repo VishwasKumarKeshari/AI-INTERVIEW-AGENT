@@ -27,7 +27,13 @@ def extract_roles_from_resume(resume_text: str, max_roles: int = 2) -> List[Dete
     )
 
     try:
-        data = json.loads(response)
+        # Some models may wrap JSON with extra text; try to extract the JSON object.
+        start = response.find("{")
+        end = response.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            data = json.loads(response[start : end + 1])
+        else:
+            data = json.loads(response)
     except json.JSONDecodeError:
         # Fallback: treat the whole response as a single low-confidence generic role
         return [DetectedRole(name="General Technical Candidate", confidence=0.5, rationale="Fallback role due to parsing error.")]
