@@ -216,6 +216,10 @@ def _run_main_page() -> None:
         # --- Phase 2 & 3: Questions (warmup + technical) ---
         elif phase == "questions" and not state.get("interview_completed", False):
             vad = get_vad_state()
+            if current_question:
+                if state.get("question_timer_question_id") != current_question.id:
+                    state["question_timer_question_id"] = current_question.id
+                    vad.reset_for_new_question()
             # Voice-based: 60s answer window
             if vad.get_elapsed_seconds() >= 60:
                 vad.force_trigger()
