@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import time
 from datetime import datetime
 from typing import Any, Dict, List
@@ -9,7 +10,6 @@ from typing import Any, Dict, List
 import streamlit as st
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
-from streamlit_webrtc import webrtc_streamer
 
 from resume_parser import parse_resume_file
 from role_extractor import extract_roles_from_resume
@@ -18,7 +18,6 @@ from evaluation_engine import AnswerEvaluator
 from report_generator import generate_report
 from vector_store import InterviewVectorStore
 from audio_io import transcribe_audio_file, speak_text, speak_text_async
-from audio_io.realtime_vad import get_vad_state, create_audio_frame_callback
 
 
 def _submit_answer_from_voice_or_auto(
@@ -175,7 +174,6 @@ def _init_interview() -> None:
     state["last_spoken_question_id"] = None
     state["outro_spoken"] = False
     _init_answer_log(state)
-    get_vad_state().reset_for_new_question()
     state["question_started_at"] = time.time()
 
 
@@ -237,7 +235,6 @@ def _run_main_page() -> None:
                 state["current_question"] = state.get("pending_question")
                 state["pending_question"] = None
                 state["interview_phase"] = "questions"
-                get_vad_state().reset_for_new_question()
                 state["question_started_at"] = time.time()
                 st.rerun()
             st_autorefresh(interval=1000, key="feedback_timer")
@@ -245,35 +242,10 @@ def _run_main_page() -> None:
 
         # --- Questions (warmup + technical) ---
         if phase == "questions" and not state.get("interview_completed", False):
-            vad = get_vad_state()
             if state.get("question_started_at") is None:
                 state["question_started_at"] = time.time()
             elapsed_sec = time.time() - float(state.get("question_started_at") or time.time())
-            # Voice-based: 60s answer window (hard timer)
-            if elapsed_sec >= 60:
-                triggered = True
-                audio_path = vad.finalize_audio_path()
-            else:
-                triggered, audio_path = vad.pop_triggered_and_audio_path()
-            if triggered and current_question:
-                transcript = ""
-                if audio_path:
-                    try:
-                        transcript = transcribe_audio_file(audio_path).strip()
-                        os.remove(audio_path)
-                    except Exception:
-                        pass
-                _append_answer_log(
-                    state,
-                    current_question,
-                    transcript if transcript else "(No answer - time expired)",
-                    was_timeout=not bool(transcript),
-                )
-                _submit_answer_from_voice_or_auto(
-                    state, session, evaluator, current_question,
-                    transcript if transcript else "(No answer - time expired)",
-                )
-                st.rerun()
+            triggered = False
 
             if state.get("interview_completed", False):
                 pass  # Fall through to results
@@ -321,34 +293,49 @@ def _run_main_page() -> None:
                 st.markdown(f"**Role:** {current_question.role}")
                 st.markdown(f"**Question:** {current_question.question}")
 
-                elapsed_sec = time.time() - float(state.get("question_started_at") or time.time())
                 remaining = max(0, 60 - int(elapsed_sec))
-                if vad.is_speaking():
-                    st.caption("Speaking... (You have up to 60 seconds total)")
-                else:
-                    st.caption(f"Time remaining: {remaining}s / 60s")
+                st.caption(f"Time remaining: {remaining}s / 60s")
 
-                # Visual mic meter (0-100)
-                rms_level = vad.get_last_rms()
-                mic_level = min(1.0, rms_level * 50.0)
-                st.progress(int(mic_level * 100), text="Mic level")
-
-                st.markdown("**Answer by voice (real-time)** — speak into your mic. You have 60 seconds per question.")
-                webrtc_streamer(
-                    key="interview_mic",
-                    audio_frame_callback=create_audio_frame_callback(),
-                    media_stream_constraints={
-                        "video": False,
-                        "audio": {
-                            "echoCancellation": True,
-                            "noiseSuppression": True,
-                            "autoGainControl": True,
-                        },
-                    },
-                    sendback_audio=False,
+                st.markdown("**Answer by voice** — record your response (up to 60 seconds).")
+                audio_data = st.audio_input(
+                    "Record your answer",
+                    key=f"audio_{current_question.id}",
                 )
+                if audio_data is not None:
+                    try:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                            tmp.write(audio_data.getvalue())
+                            tmp_path = tmp.name
+                        transcript = transcribe_audio_file(tmp_path).strip()
+                        os.remove(tmp_path)
+                    except Exception:
+                        transcript = ""
+                    _append_answer_log(
+                        state,
+                        current_question,
+                        transcript if transcript else "(No answer - time expired)",
+                        was_timeout=not bool(transcript),
+                    )
+                    _submit_answer_from_voice_or_auto(
+                        state, session, evaluator, current_question,
+                        transcript if transcript else "(No answer - time expired)",
+                    )
+                    st.rerun()
 
-                # Poll every 1s to check if VAD reached the 60s limit
+                if elapsed_sec >= 60:
+                    _append_answer_log(
+                        state,
+                        current_question,
+                        "(No answer - time expired)",
+                        was_timeout=True,
+                    )
+                    _submit_answer_from_voice_or_auto(
+                        state, session, evaluator, current_question,
+                        "(No answer - time expired)",
+                    )
+                    st.rerun()
+
+                # Poll every 1s to check if 60s limit reached
                 st_autorefresh(interval=1000, key="question_timer")
             else:
                 if session.has_more_questions():
