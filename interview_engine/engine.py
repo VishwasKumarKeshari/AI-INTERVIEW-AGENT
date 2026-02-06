@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -71,31 +72,8 @@ class InterviewSession:
         if len(candidates) == 1:
             return candidates[0]
 
-        user_payload = {
-            "role": role_name,
-            "questions": [
-                {
-                    "id": q.id,
-                    "question": q.question,
-                    "difficulty": q.difficulty,
-                    "expected_concepts": q.expected_concepts,
-                }
-                for q in candidates
-            ],
-        }
-        response = llm_client.chat(
-            system_prompt=QUESTION_SELECTION_SYSTEM_PROMPT,
-            user_prompt=json.dumps(user_payload, indent=2),
-            max_tokens=128,
-        )
-        try:
-            data = json.loads(response)
-            selected_id = str(data.get("selected_id", ""))
-        except json.JSONDecodeError:
-            selected_id = ""
-
-        by_id = {q.id: q for q in candidates}
-        return by_id.get(selected_id, candidates[0])
+        # Random selection ensures variety and avoids repeats when exclude_ids is used.
+        return random.choice(candidates)
 
     def has_more_questions(self) -> bool:
         for role_name, n_required in self.questions_per_role.items():
@@ -137,20 +115,13 @@ class InterviewSession:
 
         remaining = quota - len(self.questions_by_role[role_name])
         n_to_fetch = min(5, max(remaining, 1) + 2)
-        fetched = self.store.get_questions_for_role(
+        fetched = self.store.get_random_questions_for_role(
             role=role_name,
             n=n_to_fetch,
             exclude_ids=self.asked_question_ids,
         )
         if not fetched:
-            # Fallback: allow repeats if the pool is exhausted.
-            fetched = self.store.get_questions_for_role(
-                role=role_name,
-                n=1,
-                exclude_ids=None,
-            )
-            if not fetched:
-                return None
+            return None
 
         question = self._select_question_with_llm(role_name, fetched)
         self.asked_question_ids.append(question.id)

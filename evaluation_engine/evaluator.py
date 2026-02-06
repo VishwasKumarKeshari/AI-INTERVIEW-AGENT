@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional, Any
 
 from llm_client import llm_client
-from prompts import ANSWER_EVAL_SYSTEM_PROMPT
+from prompts import ANSWER_EVAL_SYSTEM_PROMPT, FINAL_SUMMARY_SYSTEM_PROMPT
 
 
 @dataclass
@@ -24,8 +24,12 @@ class AnswerEvaluator:
     Uses the LLM to evaluate each answer and aggregates scores per role.
     """
 
+    def __init__(self, store: Optional[Any] = None) -> None:
+        self._store = store
+
     def evaluate_answer(
         self,
+        question_id: str,
         role_name: str,
         question: str,
         ideal_answer: str,
@@ -50,22 +54,33 @@ class AnswerEvaluator:
         try:
             data = json.loads(response)
         except json.JSONDecodeError:
-            return {
+            data = {
                 "score": 1,
                 "reasoning": "Default partial score due to parsing error.",
                 "strengths": [],
                 "weaknesses": [],
             }
 
-        score = int(data.get("score", 1))
-        if score not in {0, 1, 2}:
-            score = 1
+        semantic = None
+        if self._store is not None and candidate_answer.strip():
+            try:
+                semantic = self._store.semantic_answer_score(
+                    question_id=question_id,
+                    candidate_answer=candidate_answer,
+                )
+            except Exception:
+                semantic = None
+
+        similarity = float(semantic["similarity"]) if semantic else 0.0
+        score = int(round(similarity * 100))
 
         return {
             "score": score,
             "reasoning": str(data.get("reasoning", "")),
-            "strengths": list(data.get("strengths", [])),
-            "weaknesses": list(data.get("weaknesses", [])),
+            "strengths": [],
+            "weaknesses": [],
+            "semantic_similarity": similarity,
+            "semantic_score": float(score),
         }
 
     def aggregate_role_scores(
@@ -89,8 +104,8 @@ class AnswerEvaluator:
             if not scores:
                 continue
             total = sum(scores)
-            max_possible = len(scores) * 2
-            normalized = (total / max_possible) * 10.0 if max_possible > 0 else 0.0
+            max_possible = len(scores) * 100
+            normalized = (total / max_possible) * 100.0 if max_possible > 0 else 0.0
             results.append(
                 RoleEvaluationResult(
                     role_name=role_name,
@@ -103,4 +118,32 @@ class AnswerEvaluator:
                 )
             )
         return results
+
+    def generate_final_summary(
+        self,
+        interview_state: Dict[str, Dict[str, List[Dict[str, object]]]],
+        role_results: List[RoleEvaluationResult],
+    ) -> str:
+        """
+        Generate a concise final summary using the LLM.
+        """
+        try:
+            payload = {
+                "roles": [
+                    {
+                        "role_name": r.role_name,
+                        "score_percent": round(r.normalized_score, 2),
+                    }
+                    for r in role_results
+                ],
+                "questions": interview_state.get("questions", {}),
+            }
+            response = llm_client.chat(
+                system_prompt=FINAL_SUMMARY_SYSTEM_PROMPT,
+                user_prompt=json.dumps(payload, indent=2),
+                max_tokens=256,
+            )
+            return response.strip()
+        except Exception:
+            return "Summary unavailable."
 

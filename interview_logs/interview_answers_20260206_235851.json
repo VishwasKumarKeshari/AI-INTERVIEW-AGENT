@@ -1,0 +1,64 @@
+{
+  "started_at": "2026-02-06T23:58:51.659773",
+  "roles": [
+    "ML Engineer"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "Hello my name is Vishwas Kumar Keshore and currently I am pursuing BTEC from the NSAGA University in computer science and engineering, I specialize in artificial intelligence and machine learning. So I have completed many projects, I am just running like stock price prediction and like well.",
+      "was_timeout": false,
+      "answered_at": "2026-02-06T23:59:58.773627"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "line form data ingestion and start ingestion and then model evaluation model creation and then data describing and then everything.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:00:34.441930"
+    },
+    {
+      "question_id": "ml_3",
+      "role": "ML Engineer",
+      "question": "How would you design an online prediction service for a large-scale ML model?",
+      "answer_text": "1.5% de binti 1.5% de binti 1.5% de binti 1.5% de binti",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:01:43.623328"
+    },
+    {
+      "question_id": "ml_2",
+      "role": "ML Engineer",
+      "question": "What is concept drift and how can you detect it?",
+      "answer_text": "Concept drift is when the model is kept for a while and then the prediction gets incorrect sometimes or the precision of the model is lost then you can calculate the concept drift.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:02:25.251279"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "So first of all you have to take the data, data injection, then you have to transcript the data and extract the valuable information and then do the feature engineering and then you have to create a model and then you have to check the precision of your model and then you have to just evaluate it.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:03:10.879420"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "(No answer - time expired)",
+      "was_timeout": true,
+      "answered_at": "2026-02-07T00:04:21.792356"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "So data ingations happen, there you have to extract the data from the data ingestion. And then you have to do the feature engineering, you know, smoothen the data and settle the data for your model.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:04:57.578982"
+    }
+  ]
+}

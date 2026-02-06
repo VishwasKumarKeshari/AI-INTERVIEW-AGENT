@@ -1,0 +1,118 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Interview Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">AI Interview Agent</p>
+          <h1>Conduct structured, role-aware interviews in minutes.</h1>
+          <p class="subhead">
+            Upload a resume, detect roles, then run a guided interview with live
+            evaluation and a downloadable report.
+          </p>
+        </div>
+      </header>
+
+      <section class="content">
+        <aside class="panel">
+          <h2>Setup</h2>
+          <div class="panel-block">
+            <label class="label">Upload resume (PDF/DOCX)</label>
+            <input id="resumeFile" type="file" accept=".pdf,.doc,.docx" />
+            <button id="analyzeBtn" class="primary">Analyze Resume</button>
+            <p id="resumeMessage" class="muted"></p>
+          </div>
+
+          <div class="panel-block">
+            <label class="label">Detected roles</label>
+            <div id="rolesList" class="chips empty">No roles detected yet.</div>
+          </div>
+
+          <div class="panel-block">
+            <label class="label">Interview controls</label>
+            <button id="startBtn" class="primary" disabled>Start Interview</button>
+            <button id="endBtn" class="ghost" disabled>End Session</button>
+            <p id="sessionMessage" class="muted"></p>
+          </div>
+        </aside>
+
+        <section class="workspace">
+          <div class="card question-card">
+            <div class="card-header">
+              <h3>Current question</h3>
+              <span id="questionTag" class="pill">Waiting</span>
+            </div>
+            <div class="question-body" id="questionText">
+              Upload a resume and start the interview to see the first question.
+            </div>
+            <div class="meta">
+              <span id="questionRole">Role: --</span>
+              <span id="questionDifficulty">Difficulty: --</span>
+            </div>
+          </div>
+
+          <div class="card answer-card">
+            <div class="card-header">
+              <h3>Answer</h3>
+              <span id="timer" class="timer">60s</span>
+            </div>
+            <div class="audio-controls">
+              <div>
+                <p class="label">Record answer (real-time)</p>
+                <p id="audioStatus" class="muted">Mic idle.</p>
+              </div>
+            </div>
+            <div class="mic-meter">
+              <div class="mic-meter-fill" id="micMeterFill"></div>
+            </div>
+            <audio id="audioPlayback" controls class="audio-player" hidden></audio>
+          </div>
+
+            <div class="card feedback-card">
+            <div class="card-header">
+              <h3>Feedback</h3>
+              <span id="scoreBadge" class="pill pill-muted">Feedback</span>
+            </div>
+            <div id="feedbackText" class="feedback">Feedback will appear here.</div>
+          </div>
+
+          <div class="card report-card">
+            <div class="card-header">
+              <h3>Interview report</h3>
+              <button id="reportBtn" class="ghost" disabled>Generate report</button>
+            </div>
+            <div id="reportOutput" class="report">No report generated yet.</div>
+            <div class="report-actions">
+              <button id="downloadAnswersBtn" class="ghost" disabled>Download answers JSON</button>
+              <button id="downloadReportBtn" class="ghost" disabled>Download report JSON</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <p>AI Interview Agent · Powered by your local API</p>
+      </footer>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

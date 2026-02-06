@@ -4,24 +4,13 @@ from typing import Dict, List, Any
 
 from evaluation_engine import RoleEvaluationResult
 
-
-def _summarize_points(points: List[str], max_items: int = 5) -> List[str]:
-    unique: List[str] = []
-    for p in points:
-        if p not in unique and p.strip():
-            unique.append(p.strip())
-        if len(unique) >= max_items:
-            break
-    return unique
-
-
 def generate_report(
     interview_state: Dict[str, Any],
     role_results: List[RoleEvaluationResult],
+    final_summary: str = "",
 ) -> Dict[str, Any]:
     """
-    Build a final role-wise report including normalized scores and
-    summarized strengths/weaknesses.
+    Build a final role-wise report including normalized percentage scores.
     """
     report_roles: List[Dict[str, Any]] = []
     roles_meta = interview_state.get("roles", {})
@@ -32,17 +21,21 @@ def generate_report(
                 "role_name": role_result.role_name,
                 "confidence": meta.get("confidence", None),
                 "role_rationale": meta.get("rationale", ""),
-                "score_out_of_10": round(role_result.normalized_score, 2),
+                "score_percent": round(role_result.normalized_score, 2),
                 "total_raw_score": role_result.total_score,
                 "max_possible": role_result.max_possible,
-                "strengths": _summarize_points(role_result.strengths),
-                "weaknesses": _summarize_points(role_result.weaknesses),
             }
         )
 
     overall_summary = {
         "roles": report_roles,
         "total_questions": sum(len(v) for v in interview_state.get("questions", {}).values()),
+        "final_summary": final_summary,
     }
+    if role_results:
+        total = sum(r.total_score for r in role_results)
+        max_possible = sum(r.max_possible for r in role_results)
+        overall_percent = (total / max_possible) * 100.0 if max_possible else 0.0
+        overall_summary["overall_score_percent"] = round(overall_percent, 2)
     return overall_summary
 

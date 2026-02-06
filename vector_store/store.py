@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 
 import json
+import random
 
 import chromadb
 from chromadb.config import Settings
@@ -40,7 +41,12 @@ class InterviewVectorStore:
             name=vector_store_config.collection_name,
             metadata={"hnsw:space": "cosine"},
         )
+        self._answer_collection = self._client.get_or_create_collection(
+            name=f"{vector_store_config.collection_name}_answers",
+            metadata={"hnsw:space": "cosine"},
+        )
         self._embedder = SentenceTransformer(embedding_config.model_name)
+        self.ensure_answer_collection()
 
     def _embed(self, texts: List[str]) -> List[List[float]]:
         return self._embedder.encode(texts, show_progress_bar=False).tolist()
@@ -49,6 +55,8 @@ class InterviewVectorStore:
         ids = [q.id for q in questions]
         documents = [q.question for q in questions]
         metadatas: List[Dict[str, Any]] = []
+        answer_metadatas: List[Dict[str, Any]] = []
+        answer_documents: List[str] = []
         for q in questions:
             metadatas.append(
                 {
@@ -59,6 +67,15 @@ class InterviewVectorStore:
                     "expected_concepts": json.dumps(q.expected_concepts),
                 }
             )
+            answer_metadatas.append(
+                {
+                    "role": q.role,
+                    "difficulty": q.difficulty,
+                    "question": q.question,
+                    "expected_concepts": json.dumps(q.expected_concepts),
+                }
+            )
+            answer_documents.append(q.ideal_answer)
         embeddings = self._embed(documents)
         self._collection.add(
             ids=ids,
@@ -66,6 +83,48 @@ class InterviewVectorStore:
             metadatas=metadatas,
             embeddings=embeddings,
         )
+        answer_embeddings = self._embed(answer_documents)
+        self._answer_collection.upsert(
+            ids=ids,
+            documents=answer_documents,
+            metadatas=answer_metadatas,
+            embeddings=answer_embeddings,
+        )
+
+    def ensure_answer_collection(self) -> None:
+        """
+        Backfill the answer collection from the main question collection if needed.
+        """
+        try:
+            if int(self._answer_collection.count()) > 0:
+                return
+            if int(self._collection.count()) == 0:
+                return
+            data = self._collection.get(include=["documents", "metadatas", "ids"])
+            ids = list(data.get("ids", []))
+            metadatas = list(data.get("metadatas", []))
+            if not ids or not metadatas:
+                return
+            answer_documents = [meta.get("ideal_answer", "") for meta in metadatas]
+            answer_metadatas: List[Dict[str, Any]] = []
+            for idx, meta in enumerate(metadatas):
+                answer_metadatas.append(
+                    {
+                        "role": meta.get("role", ""),
+                        "difficulty": meta.get("difficulty", ""),
+                        "question": (data.get("documents", [""])[idx] if data.get("documents") else ""),
+                        "expected_concepts": meta.get("expected_concepts", "[]"),
+                    }
+                )
+            answer_embeddings = self._embed(answer_documents)
+            self._answer_collection.upsert(
+                ids=ids,
+                documents=answer_documents,
+                metadatas=answer_metadatas,
+                embeddings=answer_embeddings,
+            )
+        except Exception:
+            return
 
     def count(self) -> int:
         return int(self._collection.count())
@@ -154,4 +213,75 @@ class InterviewVectorStore:
             if len(records) >= n:
                 break
         return records
+
+    def get_random_questions_for_role(
+        self,
+        role: str,
+        n: int,
+        exclude_ids: Optional[List[str]] = None,
+    ) -> List[QuestionRecord]:
+        """
+        Retrieve random questions for the given role, excluding already asked IDs.
+        """
+        exclude_ids = exclude_ids or []
+        results = self._collection.get(where={"role": role})
+        ids = list(results.get("ids", []))
+        documents = list(results.get("documents", []))
+        metadatas = list(results.get("metadatas", []))
+        pool = []
+        for idx, qid in enumerate(ids):
+            if qid in exclude_ids:
+                continue
+            pool.append((qid, documents[idx], metadatas[idx]))
+        if not pool:
+            return []
+        random.shuffle(pool)
+        records: List[QuestionRecord] = []
+        for qid, doc, meta in pool[:n]:
+            raw_concepts = meta.get("expected_concepts", "[]")
+            if isinstance(raw_concepts, str):
+                try:
+                    expected_concepts = json.loads(raw_concepts)
+                except json.JSONDecodeError:
+                    expected_concepts = [raw_concepts]
+            else:
+                expected_concepts = list(raw_concepts)
+            records.append(
+                QuestionRecord(
+                    id=qid,
+                    question=doc,
+                    role=role,
+                    difficulty=meta.get("difficulty", "medium"),
+                    ideal_answer=meta.get("ideal_answer", ""),
+                    expected_concepts=expected_concepts,
+                )
+            )
+        return records
+
+    def semantic_answer_score(self, question_id: str, candidate_answer: str) -> Dict[str, float]:
+        """
+        Compare candidate answer against ideal answers stored in the vector DB.
+        Returns similarity (0-1) and a mapped score (0-2).
+        """
+        if not candidate_answer.strip():
+            return {"similarity": 0.0, "score": 0.0}
+
+        stored = self._answer_collection.get(ids=[question_id], include=["embeddings"])
+        embeddings = stored.get("embeddings", []) if stored else []
+        if not embeddings:
+            return {"similarity": 0.0, "score": 0.0}
+        ideal_embedding = embeddings[0]
+        cand_embedding = self._embed([candidate_answer])[0]
+        dot = sum(a * b for a, b in zip(ideal_embedding, cand_embedding))
+        norm_a = sum(a * a for a in ideal_embedding) ** 0.5
+        norm_b = sum(b * b for b in cand_embedding) ** 0.5
+        similarity = dot / (norm_a * norm_b) if norm_a and norm_b else 0.0
+
+        if similarity >= 0.78:
+            score = 2.0
+        elif similarity >= 0.6:
+            score = 1.0
+        else:
+            score = 0.0
+        return {"similarity": similarity, "score": score}
 

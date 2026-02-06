@@ -1,0 +1,48 @@
+{
+  "started_at": "2026-02-07T00:26:12.232193",
+  "roles": [
+    "ML Engineer"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "So, I am Vishwas Kumar Kesheary, I am currently pursuing BTEC from the NSARWA University in Computer Science and Engineering, specialized with Artificial Intelligence and Machine Learning. So, I have completed many projects, I stock price prediction, rainfall prediction and driver drowsiness protection and I have also completed many courses like Machine Learning and Python for DevOps, from Coursera for Affiliated by IBM.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:27:42.870350"
+    },
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "(No answer - time expired)",
+      "was_timeout": true,
+      "answered_at": "2026-02-07T00:27:44.256130"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "So, we can design it by first of all, you have to data ingestion, you have to ingest the data and then extract the data from the files and do the feature engineering for removing missing well values or encoding the values for your model. Then, model, then create the model and load the data and then do the model evaluation. And in that you can evaluate the model accordingly and then monitor the model till it works. If it performs poorly, you can use many techniques like Spont or any other techniques for balancing the data to set.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:29:31.123961"
+    },
+    {
+      "question_id": "ml_2",
+      "role": "ML Engineer",
+      "question": "What is concept drift and how can you detect it?",
+      "answer_text": "file and it loses its precision. So the drifting happens and the model is not precise as it was before. So we can detect it by multiple ways. So first of the first way is that you have to check whether the data set is updated or not. Secondly you have to check the model. Everything the model has been not over trained or anything. So by this we can check it. If the drifting is happening or not in our model.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:31:15.500696"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "So, first of all you have to data ingestion and then extracted data from the data ingested and do the feature engineering. In feature engineering you can remove the missing values or encode the data for a model. And then after that create the model. And then after creating the model you can do the model evaluation for better precision and then monitor. And after monitoring you can deploy you can do deployment. You can deploy by creating an API from fast API which is a pipe which if you use Python or you can also use Trimbit connecting the endpoints of the data of the model. So it will be used for deployment also. So as this you can make a pipeline.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:33:04.178411"
+    }
+  ]
+}

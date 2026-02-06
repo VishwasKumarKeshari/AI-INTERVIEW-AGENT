@@ -1,0 +1,32 @@
+{
+  "started_at": "2026-02-07T00:11:52.656876",
+  "roles": [
+    "ML Engineer"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "So I am Vishwara Skumar Keshdi. I am currently pursuing machine learning, Artikusha machine learning and good science and balance of our university. So I am interested in this role because I have done many projects in this twice prediction and the drain forest prediction and many other project. So I have also got certifications in machine learning and Python from IBM which was affiliated by Korsera. So yeah.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:13:20.751525"
+    },
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "(No answer - time expired)",
+      "was_timeout": true,
+      "answered_at": "2026-02-07T00:13:24.433225"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "Hello. So into ML pipeline means from data ingestion to the deployment. So in between you have to extract the data first for you for just data then you have to extract the information from the data. You can do it by Python and then you have to do feature engineering on the data because there can be multiple missing values or you can you have to upscale the data or your photo encoding for better evaluation for your model. So you will do feature engineering then you have to check.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T00:15:09.623801"
+    }
+  ]
+}

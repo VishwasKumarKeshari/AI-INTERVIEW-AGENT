@@ -21,7 +21,7 @@ class LLMClient:
         self.model = model or llm_config.model
         self.temperature = temperature if temperature is not None else llm_config.temperature
         # Explicitly read API key from environment so it works both locally (.env)
-        # and on hosts like Streamlit Cloud (secrets / env vars).
+        # and on hosts with managed secrets / env vars.
         api_key = os.getenv("GROQ_API_KEY")
         self._client = Groq(api_key=api_key) if api_key else Groq()
 
@@ -48,4 +48,3 @@ class LLMClient:
 
 # Shared default client
 llm_client = LLMClient()
-

@@ -4,20 +4,20 @@ This document gives a brief, implementation-level overview of how each part of t
 
 ### Top-Level Flow
 
-1. **User uploads resume** in `app.py`.
+1. **User uploads resume** in the web frontend.
 2. **`resume_parser/`** converts the file to clean text.
 3. **`role_extractor/`** calls the LLM to detect up to 2 roles.
 4. **`interview_engine/` + `vector_store/`**:
    - Decide how many questions per role (10 total).
    - Retrieve role-specific questions from the Chroma vector DB.
 5. For each question:
-   - User answers (text or audio → Whisper).
-   - **`evaluation_engine/`** calls the LLM to score the answer (0–2) and returns reasoning.
+   - User answers (audio is captured in the browser and sent to the API).
+   - **`evaluation_engine/`** uses semantic similarity for percentage scoring.
    - **`interview_engine/`** stores the evaluation result in its in-memory state.
 6. After 10 questions:
    - **`evaluation_engine/`** aggregates per-role scores.
    - **`report_generator/`** builds a final role-wise report.
-   - **`app.py`** renders the results in Streamlit.
+   - The frontend renders the results.
 
 ---
 
@@ -30,7 +30,7 @@ This document gives a brief, implementation-level overview of how each part of t
   - Detects file type (PDF, DOCX, or other).
   - Uses `pdfplumber` for PDFs and `python-docx` for DOCX.
   - Normalizes whitespace and line breaks.
-  - Returns `(raw_text, cleaned_text)` to the Streamlit app.
+- Returns `(raw_text, cleaned_text)` to the API.
 
 #### `role_extractor/`
 
@@ -70,7 +70,7 @@ This document gives a brief, implementation-level overview of how each part of t
 - **Key file**: `engine.py`
   - `QuestionWithEvaluation`:
     - Holds the question plus:
-      - `answer_text`, `score`, `reasoning`, `strengths`, `weaknesses`.
+      - `answer_text`, `score`, `reasoning`.
   - `InterviewSession`:
     - Accepts detected roles and a `InterviewVectorStore`.
     - Enforces the rules:
@@ -92,18 +92,13 @@ This document gives a brief, implementation-level overview of how each part of t
   - `AnswerEvaluator`:
     - `evaluate_answer(...)`:
       - Packages role, question, ideal answer, expected concepts, and candidate answer into JSON.
-      - Sends it to the LLM (via `llm_client` and `prompts/evaluation_prompt.py`).
-      - Parses a strict JSON response with:
-        - `score` (0–2)
-        - `reasoning`
-        - `strengths`, `weaknesses`
+      - Uses semantic similarity in the vector DB to compute a percentage score.
       - Includes a safe fallback if JSON parsing fails.
     - `aggregate_role_scores(interview_state)`:
       - Reads all per-question scores from the serialized `InterviewSession`.
       - For each role:
-        - Computes `total_score` and `max_possible` (questions × 2).
-        - Calculates `normalized_score` out of 10.
-        - Aggregates strengths and weaknesses into role-level lists.
+        - Computes `total_score` and `max_possible` (questions × 100).
+        - Calculates `normalized_score` as a percentage.
   - `prompts/evaluation_prompt.py`:
     - System prompt that defines the scoring rubric (0, 1, 2) and output JSON shape.
 
@@ -114,11 +109,10 @@ This document gives a brief, implementation-level overview of how each part of t
   - `generate_report(interview_state, role_results)`:
     - Combines:
       - Role detection metadata (name, confidence, rationale).
-      - Role-wise scores and feedback from `RoleEvaluationResult`.
+      - Role-wise scores from `RoleEvaluationResult`.
     - Produces a final dict with:
-      - Each role’s score out of 10.
+      - Each role’s score in percent.
       - Total raw score and max possible.
-      - Short, deduplicated lists of strengths and weaknesses.
       - Total number of questions asked across roles.
 
 #### `audio_io/`
@@ -131,7 +125,7 @@ This document gives a brief, implementation-level overview of how each part of t
   - `tts.py`:
     - Wraps `pyttsx3` with lazy initialization:
       - Works locally where audio output is available.
-      - Gracefully degrades to a no-op on platforms without audio (e.g., Streamlit Cloud).
+      - Gracefully degrades to a no-op on platforms without audio.
     - Exposes `speak_text(text)` for text-to-speech.
 
 #### `llm_client/`
@@ -163,16 +157,13 @@ This document gives a brief, implementation-level overview of how each part of t
   - `vector_store_config` – Chroma path and collection name.
   - `audio_config` – Whisper model name.
 
-#### `app.py`
+#### `frontend/`
 
-- **Goal**: Streamlit frontend and orchestration glue.
+- **Goal**: Web frontend for the interview flow.
 - Handles:
-  - Resume upload and parsing.
-  - Role extraction display.
-  - Interview start and per-question loop.
-  - Audio upload and transcription.
-  - Calling evaluation engine for each answer.
-  - Calling report generator at the end and rendering the final results.
+  - Resume upload and role display.
+  - Interview start, question playback, and timed audio capture.
+  - Submitting answers to the API and rendering results.
 
 ---
 
@@ -181,6 +172,6 @@ This document gives a brief, implementation-level overview of how each part of t
 - **Persistent DB**:
   - Chroma at `vector_store/chroma_db/` for interview questions (RAG).
 - **In-memory state**:
-  - `InterviewSession` and all scores are stored in `st.session_state` for the active user session.
-  - When the session ends, those evaluations are not saved to disk (ready for future extension to a database if needed).
+  - `InterviewSession` and scores are stored in the API process memory for the active session.
+  - When the session ends, the in-memory state is discarded (ready for future extension to a database if needed).
 

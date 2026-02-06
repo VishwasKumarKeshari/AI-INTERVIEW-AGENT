@@ -1,0 +1,16 @@
+{
+  "started_at": "2026-02-06T23:47:44.192046",
+  "roles": [
+    "ML Engineer"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "Hello, my name is Vishwas Kumar K. Shri and I am currently pursuing BTEC from there and Sagar University. I have done multiple projects in machine learning, deep learning and generative AI. I have used multiple technologies like WAD, system, CNN and multiple algorithms, logistic algorithms or any other algorithms. I have also completed two certifications on IBM which was offered through Corsair and yeah, that's about me.",
+      "was_timeout": false,
+      "answered_at": "2026-02-06T23:49:30.134296"
+    }
+  ]
+}

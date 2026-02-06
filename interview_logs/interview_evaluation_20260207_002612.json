@@ -1,0 +1,118 @@
+{
+  "roles": {
+    "ML Engineer": {
+      "confidence": 0.95,
+      "rationale": "The candidate has a strong background in machine learning, deep learning, and Python, with hands-on experience in projects such as Stock Price Prediction, Rainfall Prediction, and Customer Churn Prediction."
+    }
+  },
+  "questions": {
+    "ML Engineer": [
+      {
+        "id": "warmup_1",
+        "question": "Tell me about yourself. What interests you about this role?",
+        "difficulty": "easy",
+        "ideal_answer": "A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
+        "expected_concepts": [
+          "self-introduction",
+          "motivation",
+          "background",
+          "experience"
+        ],
+        "answer_text": "(No answer - time expired)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide an answer within the given time frame, indicating a lack of preparation or inability to communicate effectively.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_3",
+        "question": "How would you design an online prediction service for a large-scale ML model?",
+        "difficulty": "hard",
+        "ideal_answer": "Key aspects include low-latency model serving (possibly with model quantization or distillation), autoscaling, caching, request batching, feature computation strategy (online vs offline), robust logging, A/B testing, and canary deployments. You also need monitoring for latency, errors, and model performance.",
+        "expected_concepts": [
+          "model serving",
+          "latency",
+          "autoscaling",
+          "feature store",
+          "monitoring"
+        ],
+        "answer_text": null,
+        "score": null,
+        "reasoning": null,
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_1",
+        "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+        "difficulty": "hard",
+        "ideal_answer": "An ML pipeline typically includes data ingestion, validation, feature engineering, model training, evaluation, and packaging. In production, it adds model versioning, CI/CD, automated retraining, monitoring for drift and performance, and interfaces for serving (REST, gRPC, batch). Tools like orchestrators and feature stores are often used.",
+        "expected_concepts": [
+          "data ingestion",
+          "feature engineering",
+          "training",
+          "deployment",
+          "monitoring"
+        ],
+        "answer_text": "So, first of all you have to data ingestion and then extracted data from the data ingested and do the feature engineering. In feature engineering you can remove the missing values or encode the data for a model. And then after that create the model. And then after creating the model you can do the model evaluation for better precision and then monitor. And after monitoring you can deploy you can do deployment. You can deploy by creating an API from fast API which is a pipe which if you use Python or you can also use Trimbit connecting the endpoints of the data of the model. So it will be used for deployment also. So as this you can make a pipeline.",
+        "score": 0,
+        "reasoning": "The candidate's answer covers key concepts such as data ingestion, feature engineering, model creation, evaluation, and deployment, but lacks clarity and depth in explaining the end-to-end pipeline, particularly in areas like model versioning, CI/CD, and automated retraining.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_2",
+        "question": "What is concept drift and how can you detect it?",
+        "difficulty": "medium",
+        "ideal_answer": "Concept drift occurs when the relationship between inputs and target changes over time. Detection methods include monitoring performance metrics, using statistical tests on input or output distributions, drift detectors like DDM or ADWIN, and comparing predictions to delayed ground truth.",
+        "expected_concepts": [
+          "concept drift",
+          "monitoring",
+          "statistical tests",
+          "performance metrics"
+        ],
+        "answer_text": "file and it loses its precision. So the drifting happens and the model is not precise as it was before. So we can detect it by multiple ways. So first of the first way is that you have to check whether the data set is updated or not. Secondly you have to check the model. Everything the model has been not over trained or anything. So by this we can check it. If the drifting is happening or not in our model.",
+        "score": 0,
+        "reasoning": "The candidate shows some understanding of concept drift, recognizing it as a change in the model's performance over time, but lacks specific technical details and methods for detection. Their answer touches on the idea of monitoring but does not explicitly mention key concepts like statistical tests or performance metrics.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_1",
+        "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+        "difficulty": "hard",
+        "ideal_answer": "An ML pipeline typically includes data ingestion, validation, feature engineering, model training, evaluation, and packaging. In production, it adds model versioning, CI/CD, automated retraining, monitoring for drift and performance, and interfaces for serving (REST, gRPC, batch). Tools like orchestrators and feature stores are often used.",
+        "expected_concepts": [
+          "data ingestion",
+          "feature engineering",
+          "training",
+          "deployment",
+          "monitoring"
+        ],
+        "answer_text": null,
+        "score": null,
+        "reasoning": null,
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_1",
+        "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+        "difficulty": "hard",
+        "ideal_answer": "An ML pipeline typically includes data ingestion, validation, feature engineering, model training, evaluation, and packaging. In production, it adds model versioning, CI/CD, automated retraining, monitoring for drift and performance, and interfaces for serving (REST, gRPC, batch). Tools like orchestrators and feature stores are often used.",
+        "expected_concepts": [
+          "data ingestion",
+          "feature engineering",
+          "training",
+          "deployment",
+          "monitoring"
+        ],
+        "answer_text": null,
+        "score": null,
+        "reasoning": null,
+        "strengths": [],
+        "weaknesses": []
+      }
+    ]
+  }
+}

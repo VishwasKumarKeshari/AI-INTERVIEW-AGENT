@@ -12,7 +12,7 @@ _lock = threading.Lock()
 def _ensure_engine() -> None:
     """Lazily and safely initialize the TTS engine.
 
-    On environments without audio support (e.g. Streamlit Cloud),
+    On environments without audio support,
     initialization may fail; in that case we simply disable TTS.
     """
     global _engine
