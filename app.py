@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import streamlit as st
+import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 from streamlit_webrtc import webrtc_streamer
 
@@ -28,6 +29,7 @@ def _submit_answer_from_voice_or_auto(
     answer_text: str,
 ) -> None:
     """Evaluate answer (from voice or auto-timeout) and advance to next question."""
+    feedback_text = ""
     if "(No answer" in answer_text or not answer_text.strip():
         session.record_answer_evaluation(
             question_id=current_question.id,
@@ -37,6 +39,7 @@ def _submit_answer_from_voice_or_auto(
             strengths=[],
             weaknesses=["No response submitted"],
         )
+        feedback_text = "Thanks. Let's move on to the next question."
     else:
         eval_result = evaluator.evaluate_answer(
             role_name=current_question.role,
@@ -53,14 +56,40 @@ def _submit_answer_from_voice_or_auto(
             strengths=list(eval_result["strengths"]),
             weaknesses=list(eval_result["weaknesses"]),
         )
+        strengths = ", ".join(list(eval_result.get("strengths", []))[:2])
+        weaknesses = ", ".join(list(eval_result.get("weaknesses", []))[:2])
+        feedback_parts = [str(eval_result.get("reasoning", "")).strip()]
+        if strengths:
+            feedback_parts.append(f"Strengths: {strengths}.")
+        if weaknesses:
+            feedback_parts.append(f"Areas to improve: {weaknesses}.")
+        feedback_text = " ".join(p for p in feedback_parts if p)
     if session.has_more_questions():
-        state["current_question"] = session.get_next_question()
-        get_vad_state().reset_for_new_question()
-        state["question_started_at"] = time.time()
+        state["pending_question"] = session.get_next_question()
+        state["interview_phase"] = "feedback"
+        state["feedback_text"] = feedback_text
+        state["feedback_spoken"] = False
+        state["feedback_started_at"] = time.time()
     else:
         state["current_question"] = None
         state["interview_completed"] = True
         state["question_started_at"] = None
+
+
+def _speak_in_browser(text: str) -> None:
+    if not text.strip():
+        return
+    safe_text = text.replace("\\", "\\\\").replace("`", "\\`")
+    components.html(
+        f"""
+        <script>
+        const msg = new SpeechSynthesisUtterance(`{safe_text}`);
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(msg);
+        </script>
+        """,
+        height=0,
+    )
 
 
 def _init_answer_log(state: Dict[str, Any]) -> None:
@@ -188,8 +217,31 @@ def _run_main_page() -> None:
         evaluator: AnswerEvaluator = state["evaluator"]
         phase = state.get("interview_phase", "intro")
         current_question = state.get("current_question")
+        intro_duration_sec = 8
+        feedback_duration_sec = 6
 
         st.subheader("3. Interview")
+
+        # --- Feedback ---
+        if phase == "feedback" and not state.get("interview_completed", False):
+            feedback_text = state.get("feedback_text", "").strip()
+            if feedback_text:
+                st.subheader("Interviewer Feedback")
+                st.write(feedback_text)
+                if not state.get("feedback_spoken"):
+                    state["feedback_spoken"] = True
+                    speak_text_async(feedback_text)
+                    _speak_in_browser(feedback_text)
+            started_at = state.get("feedback_started_at") or time.time()
+            if (time.time() - float(started_at)) >= feedback_duration_sec:
+                state["current_question"] = state.get("pending_question")
+                state["pending_question"] = None
+                state["interview_phase"] = "questions"
+                get_vad_state().reset_for_new_question()
+                state["question_started_at"] = time.time()
+                st.rerun()
+            st_autorefresh(interval=1000, key="feedback_timer")
+            st.stop()
 
         # --- Questions (warmup + technical) ---
         if phase == "questions" and not state.get("interview_completed", False):
@@ -240,7 +292,9 @@ def _run_main_page() -> None:
                         f"Let's begin!"
                     )
                     state["intro_spoken"] = True
+                    state["intro_started_at"] = time.time()
                     speak_text_async(intro_msg)
+                    _speak_in_browser(intro_msg)
                     st.info(
                         f"**Hello! I'm your AI Interview Agent.**\n\n"
                         f"I'll be conducting your technical interview today for the role(s): **{role_names}**.\n\n"
@@ -248,11 +302,21 @@ def _run_main_page() -> None:
                         f"**Speak into your mic**—you have **60 seconds** for each answer.\n\n"
                         f"Let's begin!"
                     )
+                    st_autorefresh(interval=1000, key="intro_timer")
+                    st.stop()
+
+                intro_started_at = state.get("intro_started_at")
+                if intro_started_at and (time.time() - float(intro_started_at)) < intro_duration_sec:
+                    remaining_intro = int(intro_duration_sec - (time.time() - float(intro_started_at)))
+                    st.caption(f"Interviewer introduction... starting in {remaining_intro}s")
+                    st_autorefresh(interval=1000, key="intro_timer_continue")
+                    st.stop()
                 # Speak the question aloud when first shown (once per question)
                 last_spoken = state.get("last_spoken_question_id")
                 if last_spoken != current_question.id:
                     state["last_spoken_question_id"] = current_question.id
                     speak_text_async(current_question.question)
+                    _speak_in_browser(current_question.question)
 
                 st.markdown(f"**Role:** {current_question.role}")
                 st.markdown(f"**Question:** {current_question.question}")
@@ -269,7 +333,15 @@ def _run_main_page() -> None:
                 webrtc_streamer(
                     key="interview_mic",
                     audio_frame_callback=create_audio_frame_callback(),
-                    media_stream_constraints={"video": False, "audio": True},
+                    media_stream_constraints={
+                        "video": False,
+                        "audio": {
+                            "echoCancellation": True,
+                            "noiseSuppression": True,
+                            "autoGainControl": True,
+                        },
+                    },
+                    sendback_audio=False,
                 )
 
                 # Poll every 1s to check if VAD reached the 60s limit
@@ -289,6 +361,7 @@ def _run_main_page() -> None:
             if not state.get("outro_spoken"):
                 state["outro_spoken"] = True
                 speak_text_async("Thank you for your time. The interview is now complete.")
+                _speak_in_browser("Thank you for your time. The interview is now complete.")
             _write_evaluation_json(state, session)
             st.subheader("4. Results")
             interview_state = session.to_serializable()
