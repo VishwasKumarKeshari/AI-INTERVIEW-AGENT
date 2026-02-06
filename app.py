@@ -79,11 +79,11 @@ def _submit_answer_from_voice_or_auto(
 def _speak_in_browser(text: str) -> None:
     if not text.strip():
         return
-    safe_text = text.replace("\\", "\\\\").replace("`", "\\`")
+    safe_text = json.dumps(text)
     components.html(
         f"""
         <script>
-        const msg = new SpeechSynthesisUtterance(`{safe_text}`);
+        const msg = new SpeechSynthesisUtterance({safe_text});
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(msg);
         </script>
@@ -323,11 +323,15 @@ def _run_main_page() -> None:
 
                 elapsed_sec = time.time() - float(state.get("question_started_at") or time.time())
                 remaining = max(0, 60 - int(elapsed_sec))
-                rms_level = vad.get_last_rms()
                 if vad.is_speaking():
-                    st.caption(f"Speaking... (You have up to 60 seconds total) | RMS: {rms_level:.4f}")
+                    st.caption("Speaking... (You have up to 60 seconds total)")
                 else:
-                    st.caption(f"Time remaining: {remaining}s / 60s | RMS: {rms_level:.4f}")
+                    st.caption(f"Time remaining: {remaining}s / 60s")
+
+                # Visual mic meter (0-100)
+                rms_level = vad.get_last_rms()
+                mic_level = min(1.0, rms_level * 50.0)
+                st.progress(int(mic_level * 100), text="Mic level")
 
                 st.markdown("**Answer by voice (real-time)** — speak into your mic. You have 60 seconds per question.")
                 webrtc_streamer(
