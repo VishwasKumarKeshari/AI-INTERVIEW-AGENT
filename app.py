@@ -167,14 +167,15 @@ def _init_interview() -> None:
     session = InterviewSession(roles=roles, store=store)
     state["interview_session"] = session
     state["evaluator"] = AnswerEvaluator()
-    state["interview_phase"] = "questions"
+    state["interview_phase"] = "intro"
     state["current_question"] = session.get_next_question()
     state["interview_completed"] = False
     state["intro_spoken"] = False
+    state["intro_started_at"] = None
     state["last_spoken_question_id"] = None
     state["outro_spoken"] = False
     _init_answer_log(state)
-    state["question_started_at"] = time.time()
+    state["question_started_at"] = None
 
 
 def _run_main_page() -> None:
@@ -220,6 +221,38 @@ def _run_main_page() -> None:
 
         st.subheader("3. Interview")
 
+        # --- Intro ---
+        if phase == "intro" and not state.get("interview_completed", False):
+            role_names = ", ".join(r.name for r in session.roles)
+            if not state.get("intro_spoken"):
+                intro_msg = (
+                    f"Hello! I'm your AI Interview Agent. "
+                    f"I'll be conducting your technical interview today for the role(s): {role_names}. "
+                    f"We'll start with a quick introduction, then move on to technical questions. "
+                    f"Speak into your mic—your answer window is 60 seconds. "
+                    f"Let's begin!"
+                )
+                state["intro_spoken"] = True
+                state["intro_started_at"] = time.time()
+                speak_text_async(intro_msg)
+                _speak_in_browser(intro_msg)
+                st.info(
+                    f"**Hello! I'm your AI Interview Agent.**\n\n"
+                    f"I'll be conducting your technical interview today for the role(s): **{role_names}**.\n\n"
+                    f"We'll start with a quick introduction, then move on to {9 if len(session.roles) == 1 else 9} technical questions. "
+                    f"**Speak into your mic**—you have **60 seconds** for each answer.\n\n"
+                    f"Let's begin!"
+                )
+            intro_started_at = state.get("intro_started_at")
+            if intro_started_at and (time.time() - float(intro_started_at)) < intro_duration_sec:
+                remaining_intro = int(intro_duration_sec - (time.time() - float(intro_started_at)))
+                st.caption(f"Interviewer introduction... starting in {remaining_intro}s")
+                st_autorefresh(interval=1000, key="intro_timer")
+                st.stop()
+            state["interview_phase"] = "questions"
+            state["question_started_at"] = time.time()
+            st.rerun()
+
         # --- Feedback ---
         if phase == "feedback" and not state.get("interview_completed", False):
             feedback_text = state.get("feedback_text", "").strip()
@@ -254,35 +287,6 @@ def _run_main_page() -> None:
                     f"Debug | qid: {current_question.id} | elapsed: {elapsed_sec:.1f}s | "
                     f"triggered: {triggered} | asked: {len(session.asked_question_ids)}"
                 )
-                if not state.get("intro_spoken"):
-                    role_names = ", ".join(r.name for r in session.roles)
-                    intro_msg = (
-                        f"Hello! I'm your AI Interview Agent. "
-                        f"I'll be conducting your technical interview today for the role(s): {role_names}. "
-                        f"We'll start with a quick introduction, then move on to technical questions. "
-                        f"Speak into your mic—your answer window is 60 seconds. "
-                        f"Let's begin!"
-                    )
-                    state["intro_spoken"] = True
-                    state["intro_started_at"] = time.time()
-                    speak_text_async(intro_msg)
-                    _speak_in_browser(intro_msg)
-                    st.info(
-                        f"**Hello! I'm your AI Interview Agent.**\n\n"
-                        f"I'll be conducting your technical interview today for the role(s): **{role_names}**.\n\n"
-                        f"We'll start with a quick introduction, then move on to {9 if len(session.roles) == 1 else 9} technical questions. "
-                        f"**Speak into your mic**—you have **60 seconds** for each answer.\n\n"
-                        f"Let's begin!"
-                    )
-                    st_autorefresh(interval=1000, key="intro_timer")
-                    st.stop()
-
-                intro_started_at = state.get("intro_started_at")
-                if intro_started_at and (time.time() - float(intro_started_at)) < intro_duration_sec:
-                    remaining_intro = int(intro_duration_sec - (time.time() - float(intro_started_at)))
-                    st.caption(f"Interviewer introduction... starting in {remaining_intro}s")
-                    st_autorefresh(interval=1000, key="intro_timer_continue")
-                    st.stop()
                 # Speak the question aloud when first shown (once per question)
                 last_spoken = state.get("last_spoken_question_id")
                 if last_spoken != current_question.id:
