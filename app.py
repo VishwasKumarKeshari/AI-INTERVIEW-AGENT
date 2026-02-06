@@ -215,7 +215,7 @@ def _run_main_page() -> None:
         evaluator: AnswerEvaluator = state["evaluator"]
         phase = state.get("interview_phase", "intro")
         current_question = state.get("current_question")
-        intro_duration_sec = 8
+        intro_duration_sec = 20
         feedback_duration_sec = 6
 
         st.subheader("3. Interview")

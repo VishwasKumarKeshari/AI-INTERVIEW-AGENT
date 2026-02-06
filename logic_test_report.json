@@ -1,0 +1,32 @@
+{
+  "roles": [
+    {
+      "role_name": "Backend Engineer",
+      "per_question_scores": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "total_score": 5.0,
+      "max_possible": 10,
+      "normalized_score": 5.0,
+      "strengths": [
+        "clarity",
+        "clarity",
+        "clarity",
+        "clarity",
+        "clarity"
+      ],
+      "weaknesses": [
+        "depth",
+        "depth",
+        "depth",
+        "depth",
+        "depth"
+      ]
+    }
+  ],
+  "total_questions": 9
+}
