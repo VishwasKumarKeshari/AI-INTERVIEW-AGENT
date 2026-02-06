@@ -185,6 +185,12 @@ def _run_main_page() -> None:
 
     st.sidebar.header("Configuration")
     st.sidebar.write("This demo uses a local Whisper model and a vector store seeded with sample questions.")
+    voice_enabled = st.sidebar.toggle(
+        "Interviewer voice",
+        value=True,
+        help="When enabled, the interviewer will read prompts aloud. If it doesn't play, use the Replay button.",
+    )
+    state["voice_enabled"] = voice_enabled
 
     st.subheader("1. Upload Resume")
     uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx", "doc"])
@@ -234,8 +240,9 @@ def _run_main_page() -> None:
                 )
                 state["intro_spoken"] = True
                 state["intro_started_at"] = time.time()
-                speak_text_async(intro_msg)
-                _speak_in_browser(intro_msg)
+                if state.get("voice_enabled", True):
+                    speak_text_async(intro_msg)
+                    _speak_in_browser(intro_msg)
                 st.info(
                     f"**Hello! I'm your AI Interview Agent.**\n\n"
                     f"I'll be conducting your technical interview today for the role(s): **{role_names}**.\n\n"
@@ -261,8 +268,9 @@ def _run_main_page() -> None:
                 st.write(feedback_text)
                 if not state.get("feedback_spoken"):
                     state["feedback_spoken"] = True
-                    speak_text_async(feedback_text)
-                    _speak_in_browser(feedback_text)
+                    if state.get("voice_enabled", True):
+                        speak_text_async(feedback_text)
+                        _speak_in_browser(feedback_text)
             started_at = state.get("feedback_started_at") or time.time()
             if (time.time() - float(started_at)) >= feedback_duration_sec:
                 state["current_question"] = state.get("pending_question")
@@ -291,11 +299,15 @@ def _run_main_page() -> None:
                 last_spoken = state.get("last_spoken_question_id")
                 if last_spoken != current_question.id:
                     state["last_spoken_question_id"] = current_question.id
-                    speak_text_async(current_question.question)
-                    _speak_in_browser(current_question.question)
+                    if state.get("voice_enabled", True):
+                        speak_text_async(current_question.question)
+                        _speak_in_browser(current_question.question)
 
                 st.markdown(f"**Role:** {current_question.role}")
                 st.markdown(f"**Question:** {current_question.question}")
+                if st.button("Replay question", key=f"replay_{current_question.id}"):
+                    speak_text_async(current_question.question)
+                    _speak_in_browser(current_question.question)
 
                 remaining = max(0, 60 - int(elapsed_sec))
                 st.caption(f"Time remaining: {remaining}s / 60s")
@@ -355,8 +367,9 @@ def _run_main_page() -> None:
         if state.get("interview_completed", False):
             if not state.get("outro_spoken"):
                 state["outro_spoken"] = True
-                speak_text_async("Thank you for your time. The interview is now complete.")
-                _speak_in_browser("Thank you for your time. The interview is now complete.")
+                if state.get("voice_enabled", True):
+                    speak_text_async("Thank you for your time. The interview is now complete.")
+                    _speak_in_browser("Thank you for your time. The interview is now complete.")
             _write_evaluation_json(state, session)
             st.subheader("4. Results")
             interview_state = session.to_serializable()
