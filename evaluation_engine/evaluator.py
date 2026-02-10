@@ -27,6 +27,14 @@ class AnswerEvaluator:
     def __init__(self, store: Optional[Any] = None) -> None:
         self._store = store
 
+    @staticmethod
+    def _safe_llm_score(value: object, default: int = 1) -> int:
+        try:
+            score = int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return default
+        return max(0, min(2, score))
+
     def evaluate_answer(
         self,
         question_id: str,
@@ -72,15 +80,27 @@ class AnswerEvaluator:
                 semantic = None
 
         similarity = float(semantic["similarity"]) if semantic else 0.0
-        score = int(round(similarity * 100))
+        llm_score_0_2 = self._safe_llm_score(data.get("score"), default=1)
+        semantic_score_0_2 = float(semantic["score"]) if semantic and "score" in semantic else float(llm_score_0_2)
+
+        # Blend rubric score (LLM) with embedding semantic score, then scale to 0-100.
+        blended_0_2 = (0.7 * float(llm_score_0_2)) + (0.3 * semantic_score_0_2)
+        score = int(round((blended_0_2 / 2.0) * 100.0))
+
+        raw_strengths = data.get("strengths", [])
+        raw_weaknesses = data.get("weaknesses", [])
+        strengths = [str(s) for s in raw_strengths] if isinstance(raw_strengths, list) else []
+        weaknesses = [str(w) for w in raw_weaknesses] if isinstance(raw_weaknesses, list) else []
 
         return {
             "score": score,
             "reasoning": str(data.get("reasoning", "")),
-            "strengths": [],
-            "weaknesses": [],
+            "strengths": strengths,
+            "weaknesses": weaknesses,
             "semantic_similarity": similarity,
-            "semantic_score": float(score),
+            "semantic_score": semantic_score_0_2,
+            "llm_score": llm_score_0_2,
+            "blended_score_0_2": round(blended_0_2, 3),
         }
 
     def aggregate_role_scores(
