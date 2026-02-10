@@ -1,0 +1,169 @@
+{
+  "roles": {
+    "ML Engineer": {
+      "confidence": 0.95,
+      "rationale": "The candidate has strong skills in machine learning, deep learning, and AI, with experience in building projects such as AI interview agents and drowsiness detection systems."
+    },
+    "Data Scientist": {
+      "confidence": 0.85,
+      "rationale": "The candidate has experience in data analysis, model evaluation, and building predictive models, such as customer churn prediction, demonstrating data science skills."
+    }
+  },
+  "questions": {
+    "ML Engineer": [
+      {
+        "id": "warmup_1",
+        "question": "Tell me about yourself. What interests you about this role?",
+        "difficulty": "easy",
+        "ideal_answer": "A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
+        "expected_concepts": [
+          "self-introduction",
+          "motivation",
+          "background",
+          "experience"
+        ],
+        "answer_text": "pursuing BTEC from the NSW University. I have key interest in machine learning and generative AI. I have also built many projects like stock price prediction, rag based AI intelligence. And many other projects, I have also completed courses like ML for beginners and Python using that, that was using Python from IBM. I have a key interest in machine learning to goals. I found it very aspiring. And for this technology, I think it's a good technology for",
+        "score": 0,
+        "reasoning": "The candidate's answer shows some relevant background and experience, but lacks clear communication and a strong motivation statement for the ML Engineer role. The answer is somewhat disjointed and fails to effectively highlight key strengths.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_10",
+        "question": "Describe how you would implement batch inference.",
+        "difficulty": "medium",
+        "ideal_answer": "Batch inference runs predictions on large datasets using scheduled jobs. It requires efficient data pipelines, checkpointing, and storage of outputs.",
+        "expected_concepts": [
+          "batch inference",
+          "pipelines",
+          "scheduling"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide a meaningful answer, stopping early without addressing the question.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_20",
+        "question": "How do you evaluate model fairness?",
+        "difficulty": "medium",
+        "ideal_answer": "Assess performance across groups using fairness metrics (e.g., demographic parity, equalized odds) and mitigate bias with data or model techniques.",
+        "expected_concepts": [
+          "fairness",
+          "bias",
+          "metrics"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide a response, indicating a lack of understanding or preparation for the topic of model fairness.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_19",
+        "question": "Describe how to design a retraining pipeline.",
+        "difficulty": "medium",
+        "ideal_answer": "A retraining pipeline schedules data collection, validation, training, evaluation, and deployment with monitoring and rollback options.",
+        "expected_concepts": [
+          "retraining",
+          "pipeline",
+          "validation",
+          "deployment"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any meaningful answer, showing no understanding of the retraining pipeline concept.",
+        "strengths": [],
+        "weaknesses": []
+      }
+    ],
+    "Data Scientist": [
+      {
+        "id": "ds_19",
+        "question": "Explain model calibration.",
+        "difficulty": "medium",
+        "ideal_answer": "Calibration measures how well predicted probabilities reflect true outcome frequencies. Techniques include Platt scaling and isotonic regression.",
+        "expected_concepts": [
+          "calibration",
+          "probabilities",
+          "Platt scaling"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of model calibration.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_4",
+        "question": "How would you evaluate a binary classifier for a highly imbalanced dataset?",
+        "difficulty": "medium",
+        "ideal_answer": "Use metrics beyond accuracy such as precision, recall, F1-score, ROC-AUC, and PR-AUC. Examine confusion matrices, consider cost of false positives vs false negatives, and possibly use stratified cross-validation. Calibration plots can help assess predicted probability quality.",
+        "expected_concepts": [
+          "precision",
+          "recall",
+          "F1",
+          "ROC-AUC",
+          "PR-AUC",
+          "imbalance"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any meaningful response, indicating a lack of understanding or preparation for the question.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_11",
+        "question": "Explain logistic regression and how it differs from linear regression.",
+        "difficulty": "easy",
+        "ideal_answer": "Logistic regression models probability with a sigmoid and is used for classification, while linear regression predicts continuous values. Loss functions differ (log loss vs MSE).",
+        "expected_concepts": [
+          "logistic regression",
+          "linear regression",
+          "classification",
+          "sigmoid"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the topic.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_12",
+        "question": "What is PCA and why is it used?",
+        "difficulty": "medium",
+        "ideal_answer": "PCA reduces dimensionality by projecting data onto components that maximize variance. It helps with noise reduction and visualization.",
+        "expected_concepts": [
+          "PCA",
+          "dimensionality reduction",
+          "variance"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the topic.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_20",
+        "question": "What is the difference between bagging and boosting?",
+        "difficulty": "medium",
+        "ideal_answer": "Bagging trains models independently to reduce variance (e.g., Random Forest). Boosting trains sequentially to reduce bias (e.g., XGBoost).",
+        "expected_concepts": [
+          "bagging",
+          "boosting",
+          "variance",
+          "bias"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide an answer, demonstrating no understanding of the concepts.",
+        "strengths": [],
+        "weaknesses": []
+      }
+    ]
+  }
+}

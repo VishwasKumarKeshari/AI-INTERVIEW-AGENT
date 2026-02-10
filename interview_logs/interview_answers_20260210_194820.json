@@ -1,0 +1,81 @@
+{
+  "started_at": "2026-02-10T19:48:20.005003",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:49:28.031076"
+    },
+    {
+      "question_id": "ml_8",
+      "role": "ML Engineer",
+      "question": "Explain how model quantization helps deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:49:34.701310"
+    },
+    {
+      "question_id": "ml_3",
+      "role": "ML Engineer",
+      "question": "How would you design an online prediction service for a large-scale ML model?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:49:40.600077"
+    },
+    {
+      "question_id": "ml_16",
+      "role": "ML Engineer",
+      "question": "Explain canary deployment for ML models.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:49:45.507909"
+    },
+    {
+      "question_id": "ds_6",
+      "role": "Data Scientist",
+      "question": "Explain precision vs recall and when you would prioritize each.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:49:52.126329"
+    },
+    {
+      "question_id": "ds_10",
+      "role": "Data Scientist",
+      "question": "What is A/B testing and what are common pitfalls?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:49:58.332914"
+    },
+    {
+      "question_id": "ds_14",
+      "role": "Data Scientist",
+      "question": "What is data leakage and how do you prevent it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:50:09.614007"
+    },
+    {
+      "question_id": "ds_11",
+      "role": "Data Scientist",
+      "question": "Explain logistic regression and how it differs from linear regression.",
+      "answer_text": "and shows a number of scales in the particular",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:50:32.053157"
+    },
+    {
+      "question_id": "ds_2",
+      "role": "Data Scientist",
+      "question": "Explain the bias-variance trade-off.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-10T19:50:36.550742"
+    }
+  ]
+}

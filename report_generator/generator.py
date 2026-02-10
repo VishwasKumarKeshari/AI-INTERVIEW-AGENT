@@ -10,7 +10,7 @@ def generate_report(
     final_summary: str = "",
 ) -> Dict[str, Any]:
     """
-    Build a final role-wise report including normalized percentage scores.
+    Build a final role-wise report without percentage fields.
     """
     report_roles: List[Dict[str, Any]] = []
     roles_meta = interview_state.get("roles", {})
@@ -21,7 +21,6 @@ def generate_report(
                 "role_name": role_result.role_name,
                 "confidence": meta.get("confidence", None),
                 "role_rationale": meta.get("rationale", ""),
-                "score_percent": round(role_result.normalized_score, 2),
                 "total_raw_score": role_result.total_score,
                 "max_possible": role_result.max_possible,
             }
@@ -33,9 +32,7 @@ def generate_report(
         "final_summary": final_summary,
     }
     if role_results:
-        total = sum(r.total_score for r in role_results)
-        max_possible = sum(r.max_possible for r in role_results)
-        overall_percent = (total / max_possible) * 100.0 if max_possible else 0.0
-        overall_summary["overall_score_percent"] = round(overall_percent, 2)
+        overall_summary["total_raw_score"] = sum(r.total_score for r in role_results)
+        overall_summary["max_possible"] = sum(r.max_possible for r in role_results)
     return overall_summary
 

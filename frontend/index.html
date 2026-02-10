@@ -34,6 +34,15 @@
       <section class="content">
         <aside class="panel">
           <h2>Setup</h2>
+          <div class="panel-block proctoring-side">
+            <div class="proctoring-head">
+              <p class="label">Camera proctoring</p>
+              <span id="gazeWarningBadge" class="pill pill-warn">Warnings: 0/5</span>
+            </div>
+            <p id="gazeStatus" class="muted">Camera check idle.</p>
+            <video id="gazeVideo" class="gaze-video" autoplay playsinline muted></video>
+          </div>
+
           <div class="panel-block">
             <label class="label">Upload resume (PDF/DOCX)</label>
             <input id="resumeFile" type="file" accept=".pdf,.doc,.docx" />
@@ -79,19 +88,12 @@
                 <p class="label">Record answer (real-time)</p>
                 <p id="audioStatus" class="muted">Mic idle.</p>
               </div>
+              <button id="stopAnswerBtn" class="ghost stop-btn" disabled>Stop & Submit</button>
             </div>
             <div class="mic-meter">
               <div class="mic-meter-fill" id="micMeterFill"></div>
             </div>
             <audio id="audioPlayback" controls class="audio-player" hidden></audio>
-          </div>
-
-            <div class="card feedback-card">
-            <div class="card-header">
-              <h3>Feedback</h3>
-              <span id="scoreBadge" class="pill pill-muted">Feedback</span>
-            </div>
-            <div id="feedbackText" class="feedback">Feedback will appear here.</div>
           </div>
 
           <div class="card report-card">
@@ -113,6 +115,7 @@
       </footer>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

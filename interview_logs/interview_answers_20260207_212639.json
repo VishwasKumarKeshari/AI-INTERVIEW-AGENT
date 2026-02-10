@@ -1,0 +1,17 @@
+{
+  "started_at": "2026-02-07T21:26:39.166508",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "Hello, my name is Vishwas Kumar Keshri and I am currently pursuing BTEC from the NSH University. I have keen interest in artificial intelligence and machine learning. I have also secured courses from Korsera which was affiliated by IBM in machine learning algorithms and Python. I have also made many projects like stock price prediction, driver draws in as a detection which are based on deep learning and machine learning where I have learned many usage of model evaluation, hyper parameter tuning and how the neural network works. So that's about me.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T21:29:47.607059"
+    }
+  ]
+}

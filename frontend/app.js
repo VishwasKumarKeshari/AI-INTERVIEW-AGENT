@@ -19,6 +19,19 @@
   audioContext: null,
   analyser: null,
   meterRaf: null,
+  stopRequested: false,
+  camStream: null,
+  camVideoLoopRaf: null,
+  faceMesh: null,
+  faceMeshBusy: false,
+  gazeMonitorTimer: null,
+  gazeLastResultAt: 0,
+  gazeIsOnScreen: true,
+  gazeAwaySince: 0,
+  lastGazeWarningAt: 0,
+  gazeWarnings: 0,
+  maxGazeWarnings: 5,
+  interviewLocked: false,
 };
 
 const PREP_SECONDS = 10;
@@ -39,13 +52,21 @@ const el = {
   audioStatus: document.getElementById("audioStatus"),
   audioPlayback: document.getElementById("audioPlayback"),
   micMeterFill: document.getElementById("micMeterFill"),
+  gazeStatus: document.getElementById("gazeStatus"),
+  gazeVideo: document.getElementById("gazeVideo"),
+  gazeWarningBadge: document.getElementById("gazeWarningBadge"),
   timer: document.getElementById("timer"),
-  feedbackText: document.getElementById("feedbackText"),
-  scoreBadge: document.getElementById("scoreBadge"),
+  stopAnswerBtn: document.getElementById("stopAnswerBtn"),
   reportBtn: document.getElementById("reportBtn"),
   reportOutput: document.getElementById("reportOutput"),
   downloadAnswersBtn: document.getElementById("downloadAnswersBtn"),
   downloadReportBtn: document.getElementById("downloadReportBtn"),
+};
+
+const setStopBtnState = (disabled) => {
+  if (el.stopAnswerBtn) {
+    el.stopAnswerBtn.disabled = disabled;
+  }
 };
 
 const toast = (message, type = "info") => {
@@ -78,6 +99,18 @@ const setAudioStatus = (message, type = "info") => {
     type === "error" ? "#ff8b8b" : type === "success" ? "#6fffe9" : "#b8c1e3";
 };
 
+const setGazeStatus = (message, type = "info") => {
+  if (!el.gazeStatus) return;
+  el.gazeStatus.textContent = message;
+  el.gazeStatus.style.color =
+    type === "error" ? "#ff8b8b" : type === "success" ? "#6fffe9" : type === "warn" ? "#ffb86b" : "#b8c1e3";
+};
+
+const updateGazeWarningBadge = () => {
+  if (!el.gazeWarningBadge) return;
+  el.gazeWarningBadge.textContent = `Warnings: ${state.gazeWarnings}/${state.maxGazeWarnings}`;
+};
+
 const getSupportedMimeType = () => {
   if (typeof MediaRecorder === "undefined") return "";
   const candidates = [
@@ -98,12 +131,6 @@ const resetAudioUI = () => {
     el.micMeterFill.style.width = "0%";
   }
   setAudioStatus("Mic idle.");
-};
-
-const resetFeedback = () => {
-  el.feedbackText.textContent = "Feedback will appear here.";
-  el.scoreBadge.textContent = "Score: --%";
-  el.scoreBadge.classList.add("pill-muted");
 };
 
 const downloadJSON = (data, filename) => {
@@ -154,6 +181,204 @@ const renderRoles = () => {
   });
 };
 
+const distance2D = (a, b) => {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
+const averagePoint = (points) => {
+  const total = points.reduce(
+    (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
+    { x: 0, y: 0 }
+  );
+  return { x: total.x / points.length, y: total.y / points.length };
+};
+
+const isLookingAtScreen = (landmarks) => {
+  if (!landmarks || landmarks.length < 477) return false;
+
+  const leftOuter = landmarks[33];
+  const leftInner = landmarks[133];
+  const rightInner = landmarks[362];
+  const rightOuter = landmarks[263];
+
+  const leftUpper = landmarks[159];
+  const leftLower = landmarks[145];
+  const rightUpper = landmarks[386];
+  const rightLower = landmarks[374];
+
+  const leftIris = averagePoint([landmarks[468], landmarks[469], landmarks[470], landmarks[471]]);
+  const rightIris = averagePoint([landmarks[473], landmarks[474], landmarks[475], landmarks[476]]);
+
+  const leftEyeWidth = Math.max(distance2D(leftOuter, leftInner), 0.0001);
+  const rightEyeWidth = Math.max(distance2D(rightOuter, rightInner), 0.0001);
+  const leftEyeOpen = distance2D(leftUpper, leftLower) / leftEyeWidth;
+  const rightEyeOpen = distance2D(rightUpper, rightLower) / rightEyeWidth;
+
+  const leftRatio = (leftIris.x - leftOuter.x) / Math.max(leftInner.x - leftOuter.x, 0.0001);
+  const rightRatio = (rightIris.x - rightInner.x) / Math.max(rightOuter.x - rightInner.x, 0.0001);
+
+  const eyesOpenEnough = leftEyeOpen > 0.12 && rightEyeOpen > 0.12;
+  const gazeCentered = leftRatio > 0.2 && leftRatio < 0.8 && rightRatio > 0.2 && rightRatio < 0.8;
+  return eyesOpenEnough && gazeCentered;
+};
+
+const stopCameraMonitoring = () => {
+  if (state.camVideoLoopRaf) {
+    cancelAnimationFrame(state.camVideoLoopRaf);
+    state.camVideoLoopRaf = null;
+  }
+  if (state.gazeMonitorTimer) {
+    clearInterval(state.gazeMonitorTimer);
+    state.gazeMonitorTimer = null;
+  }
+  if (state.camStream) {
+    state.camStream.getTracks().forEach((track) => track.stop());
+    state.camStream = null;
+  }
+  if (el.gazeVideo) {
+    el.gazeVideo.srcObject = null;
+  }
+  state.faceMeshBusy = false;
+  state.gazeAwaySince = 0;
+  state.gazeLastResultAt = 0;
+};
+
+const finalizeInterviewDueToProctoring = () => {
+  if (state.interviewLocked) return;
+  state.interviewLocked = true;
+  clearInterval(state.timer);
+  clearAutoRecordTimers();
+  if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+    state.audioDiscard = true;
+    stopRecorderOnly();
+  }
+  stopAndReleaseStream();
+  stopCameraMonitoring();
+  setQuestion(null);
+  el.questionTag.textContent = "Stopped";
+  el.questionText.textContent =
+    "Interview stopped because camera proctoring reached 5 warnings (candidate not looking at screen).";
+  setStopBtnState(true);
+  toast("Interview stopped: 5 proctoring warnings reached.", "error");
+  setGazeStatus("Interview stopped by proctoring policy.", "error");
+};
+
+const issueGazeWarning = () => {
+  const now = Date.now();
+  if (now - state.lastGazeWarningAt < 4000) return;
+  state.lastGazeWarningAt = now;
+  state.gazeWarnings += 1;
+  updateGazeWarningBadge();
+  toast(
+    `Warning ${state.gazeWarnings}/${state.maxGazeWarnings}: keep your eyes on the screen.`,
+    "error"
+  );
+  setGazeStatus("Warning issued: you are not looking at the screen.", "warn");
+  if (state.gazeWarnings >= state.maxGazeWarnings) {
+    finalizeInterviewDueToProctoring();
+  }
+};
+
+const startGazeViolationMonitor = () => {
+  if (state.gazeMonitorTimer) {
+    clearInterval(state.gazeMonitorTimer);
+  }
+  state.gazeMonitorTimer = setInterval(() => {
+    if (!state.sessionId || state.interviewLocked) return;
+
+    const now = Date.now();
+    const staleSignal = now - state.gazeLastResultAt > 2500;
+    const hasAttention = !staleSignal && state.gazeIsOnScreen;
+
+    if (hasAttention) {
+      state.gazeAwaySince = 0;
+      setGazeStatus("Camera active: candidate is looking at the screen.", "success");
+      return;
+    }
+
+    if (!state.gazeAwaySince) {
+      state.gazeAwaySince = now;
+      setGazeStatus("Look back at the screen to avoid warning.", "warn");
+      return;
+    }
+
+    if (now - state.gazeAwaySince >= 2500) {
+      state.gazeAwaySince = now;
+      issueGazeWarning();
+    }
+  }, 1000);
+};
+
+const initCameraAndGazeMonitor = async () => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setGazeStatus("Browser does not support camera access.", "error");
+    return false;
+  }
+  if (typeof FaceMesh === "undefined") {
+    setGazeStatus("Face tracking module failed to load.", "error");
+    return false;
+  }
+
+  try {
+    setGazeStatus("Requesting camera access...", "info");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
+    state.camStream = stream;
+    if (el.gazeVideo) {
+      el.gazeVideo.srcObject = stream;
+      await el.gazeVideo.play();
+    }
+
+    if (!state.faceMesh) {
+      state.faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+      });
+      state.faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6,
+      });
+      state.faceMesh.onResults((results) => {
+        state.gazeLastResultAt = Date.now();
+        const landmarks = results.multiFaceLandmarks?.[0];
+        state.gazeIsOnScreen = Boolean(landmarks && isLookingAtScreen(landmarks));
+      });
+    }
+
+    const processFrame = async () => {
+      if (!el.gazeVideo || !state.camStream) return;
+      if (!state.faceMeshBusy && el.gazeVideo.readyState >= 2) {
+        try {
+          state.faceMeshBusy = true;
+          await state.faceMesh.send({ image: el.gazeVideo });
+        } catch (_err) {
+          state.gazeIsOnScreen = false;
+        } finally {
+          state.faceMeshBusy = false;
+        }
+      }
+      state.camVideoLoopRaf = requestAnimationFrame(processFrame);
+    };
+    processFrame();
+
+    state.gazeIsOnScreen = true;
+    state.gazeAwaySince = 0;
+    state.lastGazeWarningAt = 0;
+    setGazeStatus("Camera active: gaze monitor running.", "success");
+    startGazeViolationMonitor();
+    return true;
+  } catch (err) {
+    setGazeStatus(`Camera access denied: ${err.message}`, "error");
+    stopCameraMonitoring();
+    return false;
+  }
+};
+
 const stopAndReleaseStream = () => {
   if (state.meterRaf) {
     cancelAnimationFrame(state.meterRaf);
@@ -187,8 +412,9 @@ const clearAutoRecordTimers = () => {
   }
 };
 
-const uploadAudioAnswer = async (blob) => {
+const uploadAudioAnswer = async (blob, options = {}) => {
   if (!state.sessionId || !state.question) return;
+  setStopBtnState(true);
   const ext = blob.type.includes("ogg") ? "ogg" : "webm";
   const formData = new FormData();
   formData.append("file", blob, `answer.${ext}`);
@@ -202,14 +428,15 @@ const uploadAudioAnswer = async (blob) => {
         body: formData,
       }
     );
-    await handlePostAnswerFlow(data);
+    await handlePostAnswerFlow(data, options);
   } catch (err) {
     setAudioStatus(`Audio upload failed: ${err.message}`, "error");
+    setStopBtnState(false);
   }
 };
 
 const startRecording = async () => {
-  if (!state.question) return;
+  if (!state.question || state.interviewLocked) return;
   try {
     state.audioDiscard = false;
     state.audioChunks = [];
@@ -228,6 +455,8 @@ const startRecording = async () => {
       }
     };
     recorder.onstop = () => {
+      const shouldGoNextImmediately = state.stopRequested;
+      state.stopRequested = false;
       if (state.audioDiscard) {
         state.audioDiscard = false;
         resetAudioUI();
@@ -239,13 +468,16 @@ const startRecording = async () => {
       if (!blob.size) {
         setAudioStatus("Recorded audio was empty.", "error");
         resetAudioUI();
+        if (shouldGoNextImmediately) {
+          submitStoppedAnswerWithoutAudio();
+        }
         return;
       }
       if (el.audioPlayback) {
         el.audioPlayback.src = URL.createObjectURL(blob);
         el.audioPlayback.hidden = false;
       }
-      uploadAudioAnswer(blob);
+      uploadAudioAnswer(blob, { immediateNext: shouldGoNextImmediately });
       resetAudioUI();
     };
     recorder.start();
@@ -271,6 +503,7 @@ const stopRecording = () => {
 };
 
 const startTimer = () => {
+  if (state.interviewLocked) return;
   clearInterval(state.timer);
   state.timerRemaining = PREP_SECONDS + RECORD_SECONDS;
   el.timer.textContent = `${state.timerRemaining}s`;
@@ -291,6 +524,9 @@ const startTimer = () => {
 };
 
 const setQuestion = (question) => {
+  if (state.interviewLocked && question) {
+    return;
+  }
   if (state.introTimer) {
     clearTimeout(state.introTimer);
     state.introTimer = null;
@@ -301,13 +537,14 @@ const setQuestion = (question) => {
     stopRecorderOnly();
   }
   state.question = question;
+  state.stopRequested = false;
   state.timerExpiredSent = false;
   el.questionText.textContent = question ? question.question : "No question available.";
   el.questionTag.textContent = question ? "Live" : "Waiting";
   el.questionRole.textContent = `Role: ${question ? question.role : "--"}`;
   el.questionDifficulty.textContent = `Difficulty: ${question ? question.difficulty : "--"}`;
-  resetFeedback();
   resetAudioUI();
+  setStopBtnState(!question);
   if (question) {
     startTimer();
     speakText(question.question);
@@ -330,7 +567,6 @@ const startIntro = async () => {
   el.questionTag.textContent = "Intro";
   el.questionRole.textContent = "Role: --";
   el.questionDifficulty.textContent = "Difficulty: --";
-  resetFeedback();
   resetAudioUI();
   speakText(introText);
   toast("Interviewer introduction in progress. Starting questions in 20 seconds...", "info");
@@ -345,7 +581,7 @@ const startIntro = async () => {
 const initMicStream = async () => {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     setAudioStatus("Browser does not support audio recording.", "error");
-    return;
+    return false;
   }
   try {
     setAudioStatus("Requesting microphone access...", "info");
@@ -375,29 +611,29 @@ const initMicStream = async () => {
     };
     updateMeter();
     setAudioStatus("Microphone ready. Recording will start automatically.", "success");
+    return true;
   } catch (err) {
     setAudioStatus(`Mic access denied: ${err.message}`, "error");
+    return false;
   }
 };
 
-const renderFeedback = (payload) => {
-  el.feedbackText.textContent = payload.reasoning || "No reasoning provided.";
-  el.scoreBadge.textContent = "Feedback";
-  el.scoreBadge.classList.remove("pill-muted");
-};
-
-const handlePostAnswerFlow = async (data) => {
-  renderFeedback(data);
+const handlePostAnswerFlow = async (data, options = {}) => {
+  if (state.interviewLocked) return;
   if (!data.has_more_questions) {
     toast("Interview completed. Generate the report.", "success");
     stopAndReleaseStream();
+    stopCameraMonitoring();
+    setStopBtnState(true);
     return;
   }
-  toast("Answer submitted. Next question in 20 seconds...", "success");
-  speakText(el.feedbackText.textContent);
-  setTimeout(async () => {
-    await loadNextQuestion();
-  }, 20000);
+  const immediateNext = Boolean(options.immediateNext);
+  toast("Answer submitted. Loading next question...", "success");
+  setStopBtnState(true);
+  if (!immediateNext) {
+    clearInterval(state.timer);
+  }
+  await loadNextQuestion();
 };
 
 el.analyzeBtn.addEventListener("click", async () => {
@@ -430,6 +666,13 @@ el.startBtn.addEventListener("click", async () => {
   }
   toast("Starting interview...", "info");
   try {
+    state.interviewLocked = false;
+    state.gazeWarnings = 0;
+    state.gazeAwaySince = 0;
+    state.lastGazeWarningAt = 0;
+    updateGazeWarningBadge();
+    setGazeStatus("Camera check idle.", "info");
+
     const payload = {
       roles: state.roles.map((role) => ({
         name: role.name,
@@ -448,8 +691,21 @@ el.startBtn.addEventListener("click", async () => {
     state.reportData = null;
     if (el.downloadReportBtn) el.downloadReportBtn.disabled = true;
     if (el.downloadAnswersBtn) el.downloadAnswersBtn.disabled = true;
+    setStopBtnState(true);
     toast(`Interview started. ${data.total_questions} questions queued.`, "success");
-    await initMicStream();
+    const micReady = await initMicStream();
+    const camReady = await initCameraAndGazeMonitor();
+    if (!micReady || !camReady) {
+      await apiFetch(`/interview/${state.sessionId}`, { method: "DELETE" });
+      state.sessionId = null;
+      el.endBtn.disabled = true;
+      el.reportBtn.disabled = true;
+      stopAndReleaseStream();
+      stopCameraMonitoring();
+      setQuestion(null);
+      toast("Interview cancelled: microphone and camera access are required.", "error");
+      return;
+    }
     await startIntro();
   } catch (err) {
     toast(`Start failed: ${err.message}`, "error");
@@ -457,13 +713,14 @@ el.startBtn.addEventListener("click", async () => {
 });
 
 const loadNextQuestion = async () => {
-  if (!state.sessionId) return;
+  if (!state.sessionId || state.interviewLocked) return;
   try {
     const data = await apiFetch(`/interview/${state.sessionId}/question`);
     if (!data) {
       setQuestion(null);
       toast("Interview completed.", "success");
       stopAndReleaseStream();
+      stopCameraMonitoring();
       return;
     }
     setQuestion(data);
@@ -473,7 +730,8 @@ const loadNextQuestion = async () => {
 };
 
 const submitTimeoutAnswer = async () => {
-  if (!state.question || !state.sessionId) return;
+  if (!state.question || !state.sessionId || state.interviewLocked) return;
+  setStopBtnState(true);
   try {
     const payload = {
       question_id: state.question.id,
@@ -487,8 +745,46 @@ const submitTimeoutAnswer = async () => {
     await handlePostAnswerFlow(data);
   } catch (err) {
     toast(`Timeout submit failed: ${err.message}`, "error");
+    setStopBtnState(false);
   }
 };
+
+const submitStoppedAnswerWithoutAudio = async () => {
+  if (!state.question || !state.sessionId || state.interviewLocked) return;
+  setStopBtnState(true);
+  try {
+    const payload = {
+      question_id: state.question.id,
+      answer_text: "(Candidate stopped early)",
+    };
+    const data = await apiFetch(`/interview/${state.sessionId}/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    await handlePostAnswerFlow(data, { immediateNext: true });
+  } catch (err) {
+    toast(`Stop submit failed: ${err.message}`, "error");
+    setStopBtnState(false);
+  }
+};
+
+if (el.stopAnswerBtn) {
+  el.stopAnswerBtn.addEventListener("click", async () => {
+    if (!state.sessionId || !state.question || state.interviewLocked) return;
+    if (state.stopRequested) return;
+    state.stopRequested = true;
+    clearInterval(state.timer);
+    clearAutoRecordTimers();
+    if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+      setAudioStatus("Stopping and submitting answer...", "info");
+      stopRecorderOnly();
+      return;
+    }
+    await submitStoppedAnswerWithoutAudio();
+    state.stopRequested = false;
+  });
+}
 
 el.reportBtn.addEventListener("click", async () => {
   if (!state.sessionId) return;
@@ -496,12 +792,12 @@ el.reportBtn.addEventListener("click", async () => {
     const data = await apiFetch(`/interview/${state.sessionId}/report`);
     const roles = data.roles || [];
     const lines = [];
-    if (typeof data.overall_score_percent === "number") {
-      lines.push(`Overall: ${data.overall_score_percent}%`);
+    if (typeof data.total_raw_score === "number" && typeof data.max_possible === "number") {
+      lines.push(`Overall Score: ${data.total_raw_score}/${data.max_possible}`);
       lines.push("");
     }
     roles.forEach((role) => {
-      lines.push(`${role.role_name}: ${role.score_percent}%`);
+      lines.push(`${role.role_name}: ${role.total_raw_score}/${role.max_possible}`);
       lines.push("");
     });
     if (data.final_summary) {
@@ -554,12 +850,19 @@ el.endBtn.addEventListener("click", async () => {
     if (el.downloadAnswersBtn) el.downloadAnswersBtn.disabled = true;
     clearAutoRecordTimers();
     stopAndReleaseStream();
+    stopCameraMonitoring();
     resetAudioUI();
+    setGazeStatus("Camera check idle.", "info");
+    state.gazeWarnings = 0;
+    updateGazeWarningBadge();
+    state.interviewLocked = false;
+    setStopBtnState(true);
     setQuestion(null);
   } catch (err) {
     toast(`End failed: ${err.message}`, "error");
   }
 });
 
-resetFeedback();
 resetAudioUI();
+updateGazeWarningBadge();
+setGazeStatus("Camera check idle.", "info");

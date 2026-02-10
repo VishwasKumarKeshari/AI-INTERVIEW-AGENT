@@ -1,0 +1,33 @@
+{
+  "started_at": "2026-02-07T21:31:01.865818",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "So, I am Vishwas Kumar Keshe, I am currently pursuing BTEC from Denon Sagar University. I have keen interest in artificial intelligence and machine running. I have built multiple projects which are right my skills like stock price prediction, driver drowsiness detection in which I learned about model evaluation, feature engineering, hyper parameter tuning and learned a lot about neural networks and how the CNN architecture works. And I have also multiple certificates, some of them are machine learning which was given by IBM through Coursera and data science using Python which was also given by IBM. So, I will let you know about me.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T21:33:18.710857"
+    },
+    {
+      "question_id": "ml_7",
+      "role": "ML Engineer",
+      "question": "What is training-serving skew and how do you prevent it?",
+      "answer_text": "So, training service serving SKU is the disperency between the data logic used to train an ML model and the data logic it encounters during the production interference. This misarrangment leads to poor and unexpected model performance in real-world scenarios. There can be multiple causes as well which can be feature engineering differences or data drifting. So, for preventing it there are multiple ways. First is unified pipelines feature stores or you can use monitoring and alert system for that.",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T21:35:38.540837"
+    },
+    {
+      "question_id": "ml_11",
+      "role": "ML Engineer",
+      "question": "How do you handle model rollback in production?",
+      "answer_text": "So model rollback is a safety procedure used to revert or deploy machine landing model The best practices can be automation or environmental segregation So here I've given a bad answer so that see what the feedback will come",
+      "was_timeout": false,
+      "answered_at": "2026-02-07T21:37:38.142005"
+    }
+  ]
+}

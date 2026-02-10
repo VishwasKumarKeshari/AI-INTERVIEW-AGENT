@@ -198,9 +198,57 @@ textarea {
   gap: 12px;
 }
 
+.stop-btn {
+  border: 1px solid rgba(255, 107, 107, 0.45);
+  color: #ffd0d0;
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.stop-btn:not(:disabled):hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
 .audio-player {
   width: 100%;
   margin-top: 12px;
+}
+
+.proctoring {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(9, 13, 27, 0.6);
+  border: 1px solid rgba(255, 184, 107, 0.24);
+}
+
+.proctoring-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.pill-warn {
+  color: #ffd8b0;
+  background: rgba(255, 184, 107, 0.2);
+}
+
+.proctoring-side {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(9, 13, 27, 0.6);
+  border: 1px solid rgba(255, 184, 107, 0.24);
+}
+
+.gaze-video {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 320px;
+  margin-top: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 255, 0.2);
+  background: rgba(0, 0, 0, 0.45);
+  object-fit: cover;
 }
 
 .mic-meter {

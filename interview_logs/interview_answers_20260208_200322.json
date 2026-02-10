@@ -1,0 +1,17 @@
+{
+  "started_at": "2026-02-08T20:03:22.376429",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "So, I am Vishwars, I am currently pursuing BTEC from the NSagar University. I have keen interest in artificial intelligence and machine learning. I have also built many projects like Stock Price Protection, Driver Rauberness Detection, which showcases my skillset in model evaluation feature engineering and data injection. I have also scored some certificates in ML, which was specialized by IBM. So, yeah, that's about me.",
+      "was_timeout": false,
+      "answered_at": "2026-02-08T20:07:03.875547"
+    }
+  ]
+}

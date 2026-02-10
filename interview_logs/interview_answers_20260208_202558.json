@@ -1,0 +1,17 @@
+{
+  "started_at": "2026-02-08T20:25:58.097437",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role?",
+      "answer_text": "So, hello, my name is Vishwas Kesheary and I am currently pursuing BTEC from the Anand Sagar University. I am interested in artificial intelligence and machine learning roles. I have built many projects like stock price prediction, driver drawsiness detection, in which I learned about feature engineering, model evaluation and data injection, hyper parameter tuning. I have also completed many certificates in machine learning domain, which was affiliated by IBM, given through Corsera. I think I am confident and quite quick problem solver. So, yeah, that's about me.",
+      "was_timeout": false,
+      "answered_at": "2026-02-08T20:28:30.286221"
+    }
+  ]
+}

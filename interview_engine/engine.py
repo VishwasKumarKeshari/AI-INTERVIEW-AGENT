@@ -52,7 +52,10 @@ class InterviewSession:
         self.warmup_done: bool = False
         self._warmup_record: QuestionRecord = QuestionRecord(
             id="warmup_1",
-            question="Tell me about yourself. What interests you about this role?",
+            question=(
+                "Tell me about yourself. What interests you about this role? "
+                "Also briefly highlight your key projects and certifications."
+            ),
             role=self.role_order[0],
             difficulty="easy",
             ideal_answer="A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
@@ -132,8 +135,8 @@ class InterviewSession:
         self,
         question_id: str,
         answer_text: str,
-        score: int,
-        reasoning: str,
+        score: Optional[int],
+        reasoning: Optional[str],
         strengths: List[str],
         weaknesses: List[str],
     ) -> None:

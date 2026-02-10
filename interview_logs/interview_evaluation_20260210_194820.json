@@ -1,0 +1,172 @@
+{
+  "roles": {
+    "ML Engineer": {
+      "confidence": 0.95,
+      "rationale": "The candidate has strong skills in machine learning, deep learning, and AI, with experience in building models and deploying them using frameworks like FastAPI."
+    },
+    "Data Scientist": {
+      "confidence": 0.85,
+      "rationale": "The candidate has experience in data analysis, model evaluation, and data-driven projects, with a strong foundation in programming languages like Python and SQL."
+    }
+  },
+  "questions": {
+    "ML Engineer": [
+      {
+        "id": "warmup_1",
+        "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+        "difficulty": "easy",
+        "ideal_answer": "A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
+        "expected_concepts": [
+          "self-introduction",
+          "motivation",
+          "background",
+          "experience"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": null,
+        "reasoning": null,
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_8",
+        "question": "Explain how model quantization helps deployment.",
+        "difficulty": "medium",
+        "ideal_answer": "Quantization reduces precision to shrink model size and improve latency, often with minimal accuracy loss, making deployment on edge or high-throughput systems easier.",
+        "expected_concepts": [
+          "quantization",
+          "latency",
+          "model size",
+          "deployment"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide an answer, showing no understanding of the topic.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_3",
+        "question": "How would you design an online prediction service for a large-scale ML model?",
+        "difficulty": "hard",
+        "ideal_answer": "Key aspects include low-latency model serving (possibly with model quantization or distillation), autoscaling, caching, request batching, feature computation strategy (online vs offline), robust logging, A/B testing, and canary deployments. You also need monitoring for latency, errors, and model performance.",
+        "expected_concepts": [
+          "model serving",
+          "latency",
+          "autoscaling",
+          "feature store",
+          "monitoring"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any meaningful answer, stopping early without addressing the question's requirements or expected concepts.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_16",
+        "question": "Explain canary deployment for ML models.",
+        "difficulty": "medium",
+        "ideal_answer": "Canary deployment routes a small percentage of traffic to a new model to validate performance before full rollout.",
+        "expected_concepts": [
+          "canary",
+          "deployment",
+          "validation"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide an answer, showing no understanding of the concept.",
+        "strengths": [],
+        "weaknesses": []
+      }
+    ],
+    "Data Scientist": [
+      {
+        "id": "ds_6",
+        "question": "Explain precision vs recall and when you would prioritize each.",
+        "difficulty": "easy",
+        "ideal_answer": "Precision measures correctness of positive predictions, recall measures coverage of actual positives. Prioritize recall for critical misses (fraud, disease) and precision when false positives are costly.",
+        "expected_concepts": [
+          "precision",
+          "recall",
+          "false positives",
+          "false negatives"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide a response, indicating no understanding of the concepts of precision and recall.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_10",
+        "question": "What is A/B testing and what are common pitfalls?",
+        "difficulty": "medium",
+        "ideal_answer": "A/B testing compares two variants with randomized control to measure impact. Pitfalls include peeking, low power, multiple testing, and biased sampling.",
+        "expected_concepts": [
+          "A/B testing",
+          "randomization",
+          "power",
+          "bias"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of A/B testing or its common pitfalls.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_14",
+        "question": "What is data leakage and how do you prevent it?",
+        "difficulty": "medium",
+        "ideal_answer": "Data leakage occurs when training data includes information not available at inference time. Prevent by proper splits, time-aware validation, and careful feature engineering.",
+        "expected_concepts": [
+          "data leakage",
+          "validation",
+          "features",
+          "time split"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the concept of data leakage or how to prevent it.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_11",
+        "question": "Explain logistic regression and how it differs from linear regression.",
+        "difficulty": "easy",
+        "ideal_answer": "Logistic regression models probability with a sigmoid and is used for classification, while linear regression predicts continuous values. Loss functions differ (log loss vs MSE).",
+        "expected_concepts": [
+          "logistic regression",
+          "linear regression",
+          "classification",
+          "sigmoid"
+        ],
+        "answer_text": "and shows a number of scales in the particular",
+        "score": 0,
+        "reasoning": "The candidate's answer does not address the question, showing no understanding of logistic regression, linear regression, or their differences.",
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ds_2",
+        "question": "Explain the bias-variance trade-off.",
+        "difficulty": "easy",
+        "ideal_answer": "Bias measures error from erroneous assumptions; variance measures sensitivity to training data fluctuations. High bias leads to underfitting; high variance leads to overfitting. The goal is to find a balance where total expected error is minimized, often via regularization, model complexity control, or more data.",
+        "expected_concepts": [
+          "bias",
+          "variance",
+          "underfitting",
+          "overfitting",
+          "regularization"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide an answer, demonstrating no understanding of the bias-variance trade-off.",
+        "strengths": [],
+        "weaknesses": []
+      }
+    ]
+  }
+}
