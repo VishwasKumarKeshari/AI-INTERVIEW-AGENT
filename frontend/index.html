@@ -83,17 +83,31 @@
               <h3>Answer</h3>
               <span id="timer" class="timer">60s</span>
             </div>
-            <div class="audio-controls">
-              <div>
-                <p class="label">Record answer (real-time)</p>
-                <p id="audioStatus" class="muted">Mic idle.</p>
+            <div id="audioModeSection" class="mode-section">
+              <div class="audio-controls">
+                <div>
+                  <p class="label">Record answer (real-time)</p>
+                  <p id="audioStatus" class="muted">Mic idle.</p>
+                </div>
+                <button id="stopAnswerBtn" class="ghost stop-btn" disabled>Stop & Submit</button>
               </div>
-              <button id="stopAnswerBtn" class="ghost stop-btn" disabled>Stop & Submit</button>
+              <div class="mic-meter">
+                <div class="mic-meter-fill" id="micMeterFill"></div>
+              </div>
+              <audio id="audioPlayback" controls class="audio-player" hidden></audio>
             </div>
-            <div class="mic-meter">
-              <div class="mic-meter-fill" id="micMeterFill"></div>
+
+            <div id="codingModeSection" class="mode-section" hidden>
+              <label class="label" for="codingAnswerInput">Write your coding solution</label>
+              <textarea
+                id="codingAnswerInput"
+                placeholder="Write code and explain time/space complexity..."
+              ></textarea>
+              <div class="coding-actions">
+                <button id="submitCodingBtn" class="primary" disabled>Submit Coding Answer</button>
+                <p class="muted">Auto-submit after 10 minutes if not submitted.</p>
+              </div>
             </div>
-            <audio id="audioPlayback" controls class="audio-player" hidden></audio>
           </div>
 
           <div class="card report-card">

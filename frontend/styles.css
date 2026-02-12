@@ -213,6 +213,18 @@ textarea {
   margin-top: 12px;
 }
 
+.mode-section[hidden] {
+  display: none !important;
+}
+
+.coding-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .proctoring {
   margin-top: 14px;
   padding: 12px 14px;

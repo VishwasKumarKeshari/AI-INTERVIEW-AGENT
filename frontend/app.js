@@ -32,10 +32,12 @@
   gazeWarnings: 0,
   maxGazeWarnings: 5,
   interviewLocked: false,
+  codingSubmitting: false,
 };
 
 const PREP_SECONDS = 10;
 const RECORD_SECONDS = 60;
+const CODING_SECONDS = 10 * 60;
 
 const el = {
   resumeFile: document.getElementById("resumeFile"),
@@ -57,16 +59,86 @@ const el = {
   gazeWarningBadge: document.getElementById("gazeWarningBadge"),
   timer: document.getElementById("timer"),
   stopAnswerBtn: document.getElementById("stopAnswerBtn"),
+  answerCard: document.querySelector(".answer-card"),
+  workspace: document.querySelector(".workspace"),
+  codingCard: document.getElementById("codingRoundCard"),
+  codingTimer: document.getElementById("codingTimer"),
+  audioModeSection: document.getElementById("audioModeSection"),
+  codingModeSection: document.getElementById("codingModeSection"),
+  codingAnswerInput: document.getElementById("codingAnswerInput"),
+  submitCodingBtn: document.getElementById("submitCodingBtn"),
   reportBtn: document.getElementById("reportBtn"),
   reportOutput: document.getElementById("reportOutput"),
   downloadAnswersBtn: document.getElementById("downloadAnswersBtn"),
   downloadReportBtn: document.getElementById("downloadReportBtn"),
 };
 
+const ensureCodingUI = () => {
+  if (el.codingCard && el.codingAnswerInput && el.submitCodingBtn) return;
+  if (!el.workspace) return;
+
+  let codingCard = document.getElementById("codingRoundCard");
+  if (!codingCard) {
+    codingCard = document.createElement("div");
+    codingCard.id = "codingRoundCard";
+    codingCard.className = "card coding-card";
+    codingCard.setAttribute("hidden", "");
+    codingCard.style.display = "none";
+    codingCard.innerHTML = `
+      <div class="card-header">
+        <h3>Coding Round</h3>
+        <span id="codingTimer" class="timer">10:00</span>
+      </div>
+      <label class="label" for="codingAnswerInput">Write your coding solution</label>
+      <textarea id="codingAnswerInput" placeholder="Write code and explain time/space complexity..."></textarea>
+      <div class="coding-actions">
+        <button id="submitCodingBtn" class="primary" disabled>Submit Coding Answer</button>
+        <p class="muted">Auto-submit after 10 minutes if not submitted.</p>
+      </div>
+    `;
+    const reportCard = el.workspace.querySelector(".report-card");
+    if (reportCard) {
+      el.workspace.insertBefore(codingCard, reportCard);
+    } else {
+      el.workspace.appendChild(codingCard);
+    }
+  }
+
+  el.codingCard = codingCard;
+  el.codingTimer = document.getElementById("codingTimer");
+  el.codingAnswerInput = document.getElementById("codingAnswerInput");
+  el.submitCodingBtn = document.getElementById("submitCodingBtn");
+};
+
 const setStopBtnState = (disabled) => {
   if (el.stopAnswerBtn) {
     el.stopAnswerBtn.disabled = disabled;
   }
+};
+
+const isCodingQuestion = (question = state.question) => {
+  if (!question) return false;
+  const qid = String(question.id || "").toLowerCase();
+  const qrole = String(question.role || "").toLowerCase();
+  const qtext = String(question.question || "").toLowerCase();
+  return (
+    qrole === "coding_round" ||
+    qid.startsWith("coding_") ||
+    qid === "coding_round_1" ||
+    qtext.includes("write working code")
+  );
+};
+
+const setCodingSubmitBtnState = (disabled) => {
+  if (el.submitCodingBtn) {
+    el.submitCodingBtn.disabled = disabled;
+  }
+};
+
+const formatSeconds = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 };
 
 const toast = (message, type = "info") => {
@@ -131,6 +203,34 @@ const resetAudioUI = () => {
     el.micMeterFill.style.width = "0%";
   }
   setAudioStatus("Mic idle.");
+};
+
+const setAnswerModeUI = (codingMode) => {
+  ensureCodingUI();
+  if (el.answerCard) {
+    if (codingMode) {
+      el.answerCard.setAttribute("hidden", "");
+      el.answerCard.style.display = "none";
+    } else {
+      el.answerCard.removeAttribute("hidden");
+      el.answerCard.style.display = "";
+    }
+  }
+  if (el.codingCard) {
+    if (codingMode) {
+      el.codingCard.removeAttribute("hidden");
+      el.codingCard.style.display = "";
+    } else {
+      el.codingCard.setAttribute("hidden", "");
+      el.codingCard.style.display = "none";
+    }
+  }
+
+  setStopBtnState(codingMode || !state.question);
+  setCodingSubmitBtnState(!codingMode || !state.question || state.codingSubmitting);
+  if (!codingMode && el.codingAnswerInput) {
+    el.codingAnswerInput.value = "";
+  }
 };
 
 const downloadJSON = (data, filename) => {
@@ -502,16 +602,66 @@ const stopRecording = () => {
   state.mediaRecorder.stop();
 };
 
+const submitCodingAnswer = async ({ timedOut = false } = {}) => {
+  if (!state.question || !state.sessionId || state.interviewLocked || !isCodingQuestion()) return;
+  if (state.codingSubmitting) return;
+
+  const typed = (el.codingAnswerInput?.value || "").trim();
+  const answerText = typed || (timedOut ? "(No answer - time expired)" : "");
+  if (!answerText) {
+    toast("Write your coding answer before submitting.", "error");
+    return;
+  }
+
+  state.codingSubmitting = true;
+  setCodingSubmitBtnState(true);
+  try {
+    const payload = {
+      question_id: state.question.id,
+      answer_text: answerText,
+    };
+    const data = await apiFetch(`/interview/${state.sessionId}/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    await handlePostAnswerFlow(data, { immediateNext: true });
+  } catch (err) {
+    toast(`Coding submit failed: ${err.message}`, "error");
+  } finally {
+    state.codingSubmitting = false;
+    setCodingSubmitBtnState(false);
+  }
+};
+
 const startTimer = () => {
   if (state.interviewLocked) return;
   clearInterval(state.timer);
-  state.timerRemaining = PREP_SECONDS + RECORD_SECONDS;
-  el.timer.textContent = `${state.timerRemaining}s`;
+  const codingMode = isCodingQuestion();
+  state.timerRemaining = codingMode ? CODING_SECONDS : PREP_SECONDS + RECORD_SECONDS;
+  if (el.timer) {
+    el.timer.textContent = formatSeconds(state.timerRemaining);
+  }
+  if (el.codingTimer) {
+    el.codingTimer.textContent = formatSeconds(state.timerRemaining);
+  }
   state.timer = setInterval(() => {
     state.timerRemaining -= 1;
-    el.timer.textContent = `${state.timerRemaining}s`;
+    if (el.timer) {
+      el.timer.textContent = formatSeconds(state.timerRemaining);
+    }
+    if (el.codingTimer) {
+      el.codingTimer.textContent = formatSeconds(state.timerRemaining);
+    }
     if (state.timerRemaining <= 0) {
       clearInterval(state.timer);
+      if (codingMode) {
+        if (!state.timerExpiredSent) {
+          state.timerExpiredSent = true;
+          submitCodingAnswer({ timedOut: true });
+        }
+        return;
+      }
       if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
         return;
       }
@@ -539,13 +689,29 @@ const setQuestion = (question) => {
   state.question = question;
   state.stopRequested = false;
   state.timerExpiredSent = false;
+  state.codingSubmitting = false;
   el.questionText.textContent = question ? question.question : "No question available.";
-  el.questionTag.textContent = question ? "Live" : "Waiting";
+  el.questionTag.textContent = question ? (isCodingQuestion(question) ? "Coding Round" : "Live") : "Waiting";
   el.questionRole.textContent = `Role: ${question ? question.role : "--"}`;
   el.questionDifficulty.textContent = `Difficulty: ${question ? question.difficulty : "--"}`;
   resetAudioUI();
-  setStopBtnState(!question);
+  setAnswerModeUI(isCodingQuestion(question));
   if (question) {
+    if (isCodingQuestion(question)) {
+      clearAutoRecordTimers();
+      if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+        state.audioDiscard = true;
+        stopRecorderOnly();
+      }
+      if (el.codingAnswerInput) {
+        el.codingAnswerInput.value = "";
+        el.codingAnswerInput.focus();
+      }
+      startTimer();
+      speakText("Coding round started. You have ten minutes. Submit when ready.");
+      toast("Coding round started: 10 minutes timer is running.", "info");
+      return;
+    }
     startTimer();
     speakText(question.question);
     setAudioStatus(`Question read. Recording starts in ${PREP_SECONDS}s...`, "info");
@@ -561,7 +727,7 @@ const startIntro = async () => {
   const introText =
     `Hello! I'm your interviewer today. ` +
     `We'll go through a quick warm-up and then technical questions for ${roleNames}. ` +
-    `Please answer out loud. You have 60 seconds for each response. ` +
+    `Technical responses are spoken with 60 seconds each, followed by a 10-minute coding round. ` +
     `We'll begin in a moment.`;
   el.questionText.textContent = "Interview starting... The interviewer is introducing the session.";
   el.questionTag.textContent = "Intro";
@@ -625,6 +791,7 @@ const handlePostAnswerFlow = async (data, options = {}) => {
     stopAndReleaseStream();
     stopCameraMonitoring();
     setStopBtnState(true);
+    setCodingSubmitBtnState(true);
     return;
   }
   const immediateNext = Boolean(options.immediateNext);
@@ -731,6 +898,10 @@ const loadNextQuestion = async () => {
 
 const submitTimeoutAnswer = async () => {
   if (!state.question || !state.sessionId || state.interviewLocked) return;
+  if (isCodingQuestion()) {
+    await submitCodingAnswer({ timedOut: true });
+    return;
+  }
   setStopBtnState(true);
   try {
     const payload = {
@@ -751,6 +922,7 @@ const submitTimeoutAnswer = async () => {
 
 const submitStoppedAnswerWithoutAudio = async () => {
   if (!state.question || !state.sessionId || state.interviewLocked) return;
+  if (isCodingQuestion()) return;
   setStopBtnState(true);
   try {
     const payload = {
@@ -772,6 +944,7 @@ const submitStoppedAnswerWithoutAudio = async () => {
 if (el.stopAnswerBtn) {
   el.stopAnswerBtn.addEventListener("click", async () => {
     if (!state.sessionId || !state.question || state.interviewLocked) return;
+    if (isCodingQuestion()) return;
     if (state.stopRequested) return;
     state.stopRequested = true;
     clearInterval(state.timer);
@@ -785,6 +958,18 @@ if (el.stopAnswerBtn) {
     state.stopRequested = false;
   });
 }
+
+const bindCodingSubmitHandler = () => {
+  ensureCodingUI();
+  if (!el.submitCodingBtn || el.submitCodingBtn.dataset.bound === "1") return;
+  el.submitCodingBtn.addEventListener("click", async () => {
+    if (!state.sessionId || !state.question || state.interviewLocked) return;
+    if (!isCodingQuestion()) return;
+    clearInterval(state.timer);
+    await submitCodingAnswer({ timedOut: false });
+  });
+  el.submitCodingBtn.dataset.bound = "1";
+};
 
 el.reportBtn.addEventListener("click", async () => {
   if (!state.sessionId) return;
@@ -856,7 +1041,9 @@ el.endBtn.addEventListener("click", async () => {
     state.gazeWarnings = 0;
     updateGazeWarningBadge();
     state.interviewLocked = false;
+    state.codingSubmitting = false;
     setStopBtnState(true);
+    setCodingSubmitBtnState(true);
     setQuestion(null);
   } catch (err) {
     toast(`End failed: ${err.message}`, "error");
@@ -864,5 +1051,9 @@ el.endBtn.addEventListener("click", async () => {
 });
 
 resetAudioUI();
+ensureCodingUI();
+bindCodingSubmitHandler();
+setAnswerModeUI(false);
+setCodingSubmitBtnState(true);
 updateGazeWarningBadge();
 setGazeStatus("Camera check idle.", "info");
