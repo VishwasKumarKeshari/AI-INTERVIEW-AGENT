@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from dotenv import load_dotenv
@@ -40,8 +40,24 @@ class AudioConfig:
     whisper_model: str = os.getenv("WHISPER_MODEL", "base")
 
 
+@dataclass
+class CodingRoundConfig:
+    question_files: list[str] = field(
+        default_factory=lambda: [
+            p.strip()
+            for p in os.getenv(
+                "CODING_QUESTION_FILES",
+                "data/sde 2.pdf;"
+                "data/FOOMO_Fresher_Medium_Coding_Round.pdf",
+            ).split(";")
+            if p.strip()
+        ]
+    )
+
+
 llm_config = LLMConfig()
 embedding_config = EmbeddingConfig()
 vector_store_config = VectorStoreConfig()
 audio_config = AudioConfig()
+coding_round_config = CodingRoundConfig()
 

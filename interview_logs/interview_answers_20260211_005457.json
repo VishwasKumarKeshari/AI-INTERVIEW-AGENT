@@ -1,0 +1,81 @@
+{
+  "started_at": "2026-02-11T00:54:57.075350",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "I am Vishwas Kumar Vishwari and I am currently pursuing the tech bomb data and cellular",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:55:52.393591"
+    },
+    {
+      "question_id": "ml_15",
+      "role": "ML Engineer",
+      "question": "What is a model registry?",
+      "answer_text": "Model registry is a centralized person controlled repository, used in MLOPS to manage the entire lifecycle of a machine learning model. Automatron training and experimentation to production development. It enables team to store, provide, annotate and cover the models in short traceability.",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:56:57.118560"
+    },
+    {
+      "question_id": "ml_5",
+      "role": "ML Engineer",
+      "question": "Explain the difference between offline and online feature computation.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:17.643279"
+    },
+    {
+      "question_id": "ml_2",
+      "role": "ML Engineer",
+      "question": "What is concept drift and how can you detect it?",
+      "answer_text": "year day alory",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:47.056982"
+    },
+    {
+      "question_id": "ds_10",
+      "role": "Data Scientist",
+      "question": "What is A/B testing and what are common pitfalls?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:50.492158"
+    },
+    {
+      "question_id": "ds_19",
+      "role": "Data Scientist",
+      "question": "Explain model calibration.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:53.162097"
+    },
+    {
+      "question_id": "ds_14",
+      "role": "Data Scientist",
+      "question": "What is data leakage and how do you prevent it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:54.993294"
+    },
+    {
+      "question_id": "ds_11",
+      "role": "Data Scientist",
+      "question": "Explain logistic regression and how it differs from linear regression.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:56.927164"
+    },
+    {
+      "question_id": "ds_15",
+      "role": "Data Scientist",
+      "question": "Explain ROC curve and PR curve differences.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-11T00:57:58.458026"
+    }
+  ]
+}

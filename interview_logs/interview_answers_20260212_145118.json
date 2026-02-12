@@ -1,0 +1,97 @@
+{
+  "started_at": "2026-02-12T14:51:18.143628",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "\u3088\u308b\u3088\u308b\u3088",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:05.401004"
+    },
+    {
+      "question_id": "ml_3",
+      "role": "ML Engineer",
+      "question": "How would you design an online prediction service for a large-scale ML model?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:07.885094"
+    },
+    {
+      "question_id": "ml_6",
+      "role": "ML Engineer",
+      "question": "How would you monitor an ML model in production?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:14.592617"
+    },
+    {
+      "question_id": "ml_17",
+      "role": "ML Engineer",
+      "question": "How do you handle data privacy in ML pipelines?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:19.043996"
+    },
+    {
+      "question_id": "ml_20",
+      "role": "ML Engineer",
+      "question": "How do you evaluate model fairness?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:22.560608"
+    },
+    {
+      "question_id": "ds_6",
+      "role": "Data Scientist",
+      "question": "Explain precision vs recall and when you would prioritize each.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:24.007414"
+    },
+    {
+      "question_id": "ds_8",
+      "role": "Data Scientist",
+      "question": "Explain the difference between supervised and unsupervised learning.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:28.311912"
+    },
+    {
+      "question_id": "ds_1",
+      "role": "Data Scientist",
+      "question": "How do you handle class imbalance in a classification problem?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:32.632807"
+    },
+    {
+      "question_id": "ds_11",
+      "role": "Data Scientist",
+      "question": "Explain logistic regression and how it differs from linear regression.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:34.721900"
+    },
+    {
+      "question_id": "ds_12",
+      "role": "Data Scientist",
+      "question": "What is PCA and why is it used?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:36.643182"
+    },
+    {
+      "question_id": "coding_406bc5d5cd",
+      "role": "coding_round",
+      "question": "Longest Consecutive Sequence. Write working code and explain time and space complexity.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:52:38.065073"
+    }
+  ]
+}

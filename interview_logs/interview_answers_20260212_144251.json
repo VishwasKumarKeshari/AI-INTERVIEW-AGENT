@@ -1,0 +1,89 @@
+{
+  "started_at": "2026-02-12T14:42:51.862242",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:24.328824"
+    },
+    {
+      "question_id": "ml_17",
+      "role": "ML Engineer",
+      "question": "How do you handle data privacy in ML pipelines?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:26.902561"
+    },
+    {
+      "question_id": "ml_11",
+      "role": "ML Engineer",
+      "question": "How do you handle model rollback in production?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:29.108658"
+    },
+    {
+      "question_id": "ml_9",
+      "role": "ML Engineer",
+      "question": "What is a feature store and why use one?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:36.328110"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:38.081301"
+    },
+    {
+      "question_id": "ds_14",
+      "role": "Data Scientist",
+      "question": "What is data leakage and how do you prevent it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:39.834220"
+    },
+    {
+      "question_id": "ds_5",
+      "role": "Data Scientist",
+      "question": "What is regularization and why is it useful?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:41.280203"
+    },
+    {
+      "question_id": "ds_3",
+      "role": "Data Scientist",
+      "question": "What is cross-validation and why is it useful?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:42.709511"
+    },
+    {
+      "question_id": "ds_15",
+      "role": "Data Scientist",
+      "question": "Explain ROC curve and PR curve differences.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:44.470545"
+    },
+    {
+      "question_id": "ds_18",
+      "role": "Data Scientist",
+      "question": "What is the purpose of a validation set?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:43:46.653395"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "started_at": "2026-02-12T14:58:00.403865",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:25.042737"
+    },
+    {
+      "question_id": "ml_8",
+      "role": "ML Engineer",
+      "question": "Explain how model quantization helps deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:26.973705"
+    },
+    {
+      "question_id": "ml_12",
+      "role": "ML Engineer",
+      "question": "What is model drift vs data drift?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:29.305661"
+    },
+    {
+      "question_id": "ml_13",
+      "role": "ML Engineer",
+      "question": "Explain A/B testing for ML models.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:37.114222"
+    },
+    {
+      "question_id": "ml_7",
+      "role": "ML Engineer",
+      "question": "What is training-serving skew and how do you prevent it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:39.845223"
+    },
+    {
+      "question_id": "ds_5",
+      "role": "Data Scientist",
+      "question": "What is regularization and why is it useful?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:41.716643"
+    },
+    {
+      "question_id": "ds_16",
+      "role": "Data Scientist",
+      "question": "How would you handle missing data?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:43.398494"
+    },
+    {
+      "question_id": "ds_9",
+      "role": "Data Scientist",
+      "question": "How do you detect and handle outliers?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:45.431758"
+    },
+    {
+      "question_id": "ds_8",
+      "role": "Data Scientist",
+      "question": "Explain the difference between supervised and unsupervised learning.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:47.993510"
+    },
+    {
+      "question_id": "ds_4",
+      "role": "Data Scientist",
+      "question": "How would you evaluate a binary classifier for a highly imbalanced dataset?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:58:49.762500"
+    }
+  ]
+}

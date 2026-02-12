@@ -1,0 +1,89 @@
+{
+  "started_at": "2026-02-12T15:10:24.454563",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:48.809710"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:50.551192"
+    },
+    {
+      "question_id": "ml_8",
+      "role": "ML Engineer",
+      "question": "Explain how model quantization helps deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:52.415478"
+    },
+    {
+      "question_id": "ml_5",
+      "role": "ML Engineer",
+      "question": "Explain the difference between offline and online feature computation.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:54.231677"
+    },
+    {
+      "question_id": "ml_2",
+      "role": "ML Engineer",
+      "question": "What is concept drift and how can you detect it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:55.834020"
+    },
+    {
+      "question_id": "ds_15",
+      "role": "Data Scientist",
+      "question": "Explain ROC curve and PR curve differences.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:57.281609"
+    },
+    {
+      "question_id": "ds_12",
+      "role": "Data Scientist",
+      "question": "What is PCA and why is it used?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:10:59.038185"
+    },
+    {
+      "question_id": "ds_14",
+      "role": "Data Scientist",
+      "question": "What is data leakage and how do you prevent it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:11:00.853352"
+    },
+    {
+      "question_id": "ds_10",
+      "role": "Data Scientist",
+      "question": "What is A/B testing and what are common pitfalls?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:11:02.718302"
+    },
+    {
+      "question_id": "ds_19",
+      "role": "Data Scientist",
+      "question": "Explain model calibration.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:11:04.471433"
+    }
+  ]
+}

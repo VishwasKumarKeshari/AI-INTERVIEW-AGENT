@@ -1,0 +1,89 @@
+{
+  "started_at": "2026-02-12T14:54:14.067340",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:36.829323"
+    },
+    {
+      "question_id": "ml_7",
+      "role": "ML Engineer",
+      "question": "What is training-serving skew and how do you prevent it?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:38.723383"
+    },
+    {
+      "question_id": "ml_1",
+      "role": "ML Engineer",
+      "question": "Describe an end-to-end ML pipeline from data ingestion to deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:40.509023"
+    },
+    {
+      "question_id": "ml_8",
+      "role": "ML Engineer",
+      "question": "Explain how model quantization helps deployment.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:42.252206"
+    },
+    {
+      "question_id": "ml_20",
+      "role": "ML Engineer",
+      "question": "How do you evaluate model fairness?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:43.998456"
+    },
+    {
+      "question_id": "ds_16",
+      "role": "Data Scientist",
+      "question": "How would you handle missing data?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:45.918873"
+    },
+    {
+      "question_id": "ds_6",
+      "role": "Data Scientist",
+      "question": "Explain precision vs recall and when you would prioritize each.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:47.529484"
+    },
+    {
+      "question_id": "ds_4",
+      "role": "Data Scientist",
+      "question": "How would you evaluate a binary classifier for a highly imbalanced dataset?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:49.600781"
+    },
+    {
+      "question_id": "ds_3",
+      "role": "Data Scientist",
+      "question": "What is cross-validation and why is it useful?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:51.202248"
+    },
+    {
+      "question_id": "ds_20",
+      "role": "Data Scientist",
+      "question": "What is the difference between bagging and boosting?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T14:54:55.033328"
+    }
+  ]
+}

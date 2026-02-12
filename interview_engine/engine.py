@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 
 from role_extractor import DetectedRole
 from vector_store import InterviewVectorStore, QuestionRecord
+from coding_round import load_coding_round_questions
 from llm_client import llm_client
 from prompts import QUESTION_SELECTION_SYSTEM_PROMPT
 
@@ -24,8 +25,8 @@ class QuestionWithEvaluation:
 class InterviewSession:
     """
     Maintains the interview flow:
-    - Allocates exactly 10 questions overall.
-    - If 1 role: 10 questions; if 2 roles: 5 each.
+    - Runs warmup + technical questions based on role allocation.
+    - Adds one coding-round question after technical questions are done.
     - Uses the vector store to fetch questions, avoiding duplicates.
     """
 
@@ -36,20 +37,26 @@ class InterviewSession:
         self.roles = roles[:2]
         self.store = store or InterviewVectorStore()
 
-        # 1 warmup + 9 technical = 10 total. For 2 roles: 1 warmup + 4+5 technical.
+        # Warmup is stored under the first role list and counts toward that role quota.
+        # 1 role: warmup + 9 technical => quota 10.
+        # 2 roles: warmup + 4 technical (role 1) + 5 technical (role 2) => quotas 5 and 5.
         if len(self.roles) == 1:
-            self.questions_per_role = {self.roles[0].name: 9}
+            self.questions_per_role = {self.roles[0].name: 10}
         else:
             self.questions_per_role = {
-                self.roles[0].name: 4,
+                self.roles[0].name: 5,
                 self.roles[1].name: 5,
             }
 
         self.role_order: List[str] = list(self.questions_per_role.keys())
+        self.coding_role_name: str = "coding_round"
         self.current_role_index: int = 0
         self.asked_question_ids: List[str] = []
         self.questions_by_role: Dict[str, List[QuestionWithEvaluation]] = {r: [] for r in self.role_order}
+        self.questions_by_role[self.coding_role_name] = []
         self.warmup_done: bool = False
+        self.coding_round_done: bool = False
+        self._coding_round_questions: List[QuestionRecord] = load_coding_round_questions()
         self._warmup_record: QuestionRecord = QuestionRecord(
             id="warmup_1",
             question=(
@@ -60,6 +67,18 @@ class InterviewSession:
             difficulty="easy",
             ideal_answer="A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
             expected_concepts=["self-introduction", "motivation", "background", "experience"],
+        )
+        self._fallback_coding_round_record: QuestionRecord = QuestionRecord(
+            id="coding_round_1",
+            question=(
+                "Coding round: Write code to return the first non-repeating character "
+                "in a string. If every character repeats, return an empty string. "
+                "Explain time and space complexity."
+            ),
+            role=self.coding_role_name,
+            difficulty="medium",
+            ideal_answer="Coding answer expected. No automatic scoring for coding round.",
+            expected_concepts=["hash map", "string traversal", "time complexity", "space complexity"],
         )
 
     def _current_role_name(self) -> str:
@@ -78,11 +97,14 @@ class InterviewSession:
         # Random selection ensures variety and avoids repeats when exclude_ids is used.
         return random.choice(candidates)
 
-    def has_more_questions(self) -> bool:
+    def _has_more_technical_questions(self) -> bool:
         for role_name, n_required in self.questions_per_role.items():
             if len(self.questions_by_role[role_name]) < n_required:
                 return True
         return False
+
+    def has_more_questions(self) -> bool:
+        return self._has_more_technical_questions() or (not self.coding_round_done)
 
     def get_next_question(self) -> Optional[QuestionRecord]:
         """
@@ -97,7 +119,18 @@ class InterviewSession:
             )
             return self._warmup_record
 
-        if not self.has_more_questions():
+        if not self._has_more_technical_questions():
+            if not self.coding_round_done:
+                self.coding_round_done = True
+                selected_coding_question = (
+                    random.choice(self._coding_round_questions)
+                    if self._coding_round_questions
+                    else self._fallback_coding_round_record
+                )
+                self.questions_by_role[self.coding_role_name].append(
+                    QuestionWithEvaluation(question=selected_coding_question)
+                )
+                return selected_coding_question
             return None
 
         role_name = self._current_role_name()

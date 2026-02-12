@@ -1,0 +1,89 @@
+{
+  "started_at": "2026-02-12T15:07:47.490840",
+  "roles": [
+    "ML Engineer",
+    "Data Scientist"
+  ],
+  "answers": [
+    {
+      "question_id": "warmup_1",
+      "role": "ML Engineer",
+      "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:15.445825"
+    },
+    {
+      "question_id": "ml_20",
+      "role": "ML Engineer",
+      "question": "How do you evaluate model fairness?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:22.251566"
+    },
+    {
+      "question_id": "ml_18",
+      "role": "ML Engineer",
+      "question": "What is online learning and when is it useful?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:24.248388"
+    },
+    {
+      "question_id": "ml_14",
+      "role": "ML Engineer",
+      "question": "How would you ensure low latency for a large model?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:26.000800"
+    },
+    {
+      "question_id": "ml_15",
+      "role": "ML Engineer",
+      "question": "What is a model registry?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:27.995127"
+    },
+    {
+      "question_id": "ds_9",
+      "role": "Data Scientist",
+      "question": "How do you detect and handle outliers?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:30.088446"
+    },
+    {
+      "question_id": "ds_1",
+      "role": "Data Scientist",
+      "question": "How do you handle class imbalance in a classification problem?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:32.481559"
+    },
+    {
+      "question_id": "ds_17",
+      "role": "Data Scientist",
+      "question": "Describe k-means clustering and its limitations.",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:34.713057"
+    },
+    {
+      "question_id": "ds_13",
+      "role": "Data Scientist",
+      "question": "How do you choose evaluation metrics for a regression problem?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:36.470332"
+    },
+    {
+      "question_id": "ds_20",
+      "role": "Data Scientist",
+      "question": "What is the difference between bagging and boosting?",
+      "answer_text": "(Candidate stopped early)",
+      "was_timeout": false,
+      "answered_at": "2026-02-12T15:08:38.234236"
+    }
+  ]
+}

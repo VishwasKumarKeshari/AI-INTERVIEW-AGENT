@@ -1,0 +1,197 @@
+{
+  "roles": {
+    "ML Engineer": {
+      "confidence": 0.95,
+      "rationale": "The candidate has strong skills in machine learning, deep learning, and AI, with experience in building models and deploying them using frameworks like FastAPI."
+    },
+    "Data Scientist": {
+      "confidence": 0.85,
+      "rationale": "The candidate has experience in data analysis, model evaluation, and data-driven projects, with a strong foundation in programming languages like Python and SQL."
+    }
+  },
+  "questions": {
+    "ML Engineer": [
+      {
+        "id": "warmup_1",
+        "question": "Tell me about yourself. What interests you about this role? Also briefly highlight your key projects and certifications.",
+        "difficulty": "easy",
+        "ideal_answer": "A strong answer covers background, relevant experience, motivation for the role, and key strengths. Clear communication and enthusiasm are valued.",
+        "expected_concepts": [
+          "self-introduction",
+          "motivation",
+          "background",
+          "experience"
+        ],
+        "answer_text": "I am Vishwas Kumar Vishwari and I am currently pursuing the tech bomb data and cellular",
+        "score": null,
+        "reasoning": null,
+        "strengths": [],
+        "weaknesses": []
+      },
+      {
+        "id": "ml_15",
+        "question": "What is a model registry?",
+        "difficulty": "easy",
+        "ideal_answer": "A model registry stores model artifacts, metadata, metrics, and stages (staging/production) for governance and deployment workflows.",
+        "expected_concepts": [
+          "model registry",
+          "metadata",
+          "governance"
+        ],
+        "answer_text": "Model registry is a centralized person controlled repository, used in MLOPS to manage the entire lifecycle of a machine learning model. Automatron training and experimentation to production development. It enables team to store, provide, annotate and cover the models in short traceability.",
+        "score": 50,
+        "reasoning": "The candidate's answer demonstrates a general understanding of a model registry, mentioning its role in managing the machine learning model lifecycle and MLOPS. However, it lacks specific details about storing model artifacts, metrics, and stages, and the explanation is somewhat unclear and includes typos.",
+        "strengths": [
+          "recognizes the centralized nature of a model registry",
+          "associates it with MLOPS and model lifecycle management"
+        ],
+        "weaknesses": [
+          "lacks clarity and specificity in the explanation",
+          "does not explicitly mention metadata, governance, or deployment stages"
+        ]
+      },
+      {
+        "id": "ml_5",
+        "question": "Explain the difference between offline and online feature computation.",
+        "difficulty": "medium",
+        "ideal_answer": "Offline features are precomputed in batch, while online features are computed at request time. Consistency between them is crucial to avoid training-serving skew.",
+        "expected_concepts": [
+          "feature computation",
+          "offline",
+          "online",
+          "skew"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the topic.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of knowledge on feature computation",
+          "Inability to articulate differences between offline and online computation"
+        ]
+      },
+      {
+        "id": "ml_2",
+        "question": "What is concept drift and how can you detect it?",
+        "difficulty": "medium",
+        "ideal_answer": "Concept drift occurs when the relationship between inputs and target changes over time. Detection methods include monitoring performance metrics, using statistical tests on input or output distributions, drift detectors like DDM or ADWIN, and comparing predictions to delayed ground truth.",
+        "expected_concepts": [
+          "concept drift",
+          "monitoring",
+          "statistical tests",
+          "performance metrics"
+        ],
+        "answer_text": "year day alory",
+        "score": 0,
+        "reasoning": "The candidate's answer shows no understanding of concept drift or its detection methods, and does not mention any relevant technical concepts.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of relevant terminology",
+          "No indication of understanding the concept of concept drift"
+        ]
+      }
+    ],
+    "Data Scientist": [
+      {
+        "id": "ds_10",
+        "question": "What is A/B testing and what are common pitfalls?",
+        "difficulty": "medium",
+        "ideal_answer": "A/B testing compares two variants with randomized control to measure impact. Pitfalls include peeking, low power, multiple testing, and biased sampling.",
+        "expected_concepts": [
+          "A/B testing",
+          "randomization",
+          "power",
+          "bias"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of A/B testing or its common pitfalls.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of knowledge of A/B testing concepts",
+          "Inability to articulate an answer"
+        ]
+      },
+      {
+        "id": "ds_19",
+        "question": "Explain model calibration.",
+        "difficulty": "medium",
+        "ideal_answer": "Calibration measures how well predicted probabilities reflect true outcome frequencies. Techniques include Platt scaling and isotonic regression.",
+        "expected_concepts": [
+          "calibration",
+          "probabilities",
+          "Platt scaling"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of model calibration.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of knowledge on model calibration",
+          "Inability to provide a relevant response"
+        ]
+      },
+      {
+        "id": "ds_14",
+        "question": "What is data leakage and how do you prevent it?",
+        "difficulty": "medium",
+        "ideal_answer": "Data leakage occurs when training data includes information not available at inference time. Prevent by proper splits, time-aware validation, and careful feature engineering.",
+        "expected_concepts": [
+          "data leakage",
+          "validation",
+          "features",
+          "time split"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the concept of data leakage or how to prevent it.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of knowledge on data leakage",
+          "Inability to provide a relevant response"
+        ]
+      },
+      {
+        "id": "ds_11",
+        "question": "Explain logistic regression and how it differs from linear regression.",
+        "difficulty": "easy",
+        "ideal_answer": "Logistic regression models probability with a sigmoid and is used for classification, while linear regression predicts continuous values. Loss functions differ (log loss vs MSE).",
+        "expected_concepts": [
+          "logistic regression",
+          "linear regression",
+          "classification",
+          "sigmoid"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the topic.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of knowledge of logistic and linear regression",
+          "Inability to articulate differences between classification and regression tasks"
+        ]
+      },
+      {
+        "id": "ds_15",
+        "question": "Explain ROC curve and PR curve differences.",
+        "difficulty": "medium",
+        "ideal_answer": "ROC shows TPR vs FPR, PR shows precision vs recall. PR is more informative for imbalanced datasets.",
+        "expected_concepts": [
+          "ROC",
+          "PR curve",
+          "TPR",
+          "FPR",
+          "imbalance"
+        ],
+        "answer_text": "(Candidate stopped early)",
+        "score": 0,
+        "reasoning": "The candidate failed to provide any answer, showing no understanding of the topic.",
+        "strengths": [],
+        "weaknesses": [
+          "Lack of knowledge about ROC and PR curves",
+          "Inability to articulate differences between the two"
+        ]
+      }
+    ]
+  }
+}
