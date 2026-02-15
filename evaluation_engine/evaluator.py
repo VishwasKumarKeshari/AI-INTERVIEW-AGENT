@@ -35,6 +35,18 @@ class AnswerEvaluator:
             return default
         return max(0, min(2, score))
 
+    @staticmethod
+    def _concept_coverage(expected_concepts: List[str], candidate_answer: str) -> float:
+        if not expected_concepts:
+            return 0.0
+        text = candidate_answer.lower()
+        hits = 0
+        for concept in expected_concepts:
+            c = str(concept).strip().lower()
+            if c and c in text:
+                hits += 1
+        return hits / float(len(expected_concepts))
+
     def evaluate_answer(
         self,
         question_id: str,
@@ -82,6 +94,12 @@ class AnswerEvaluator:
         similarity = float(semantic["similarity"]) if semantic else 0.0
         llm_score_0_2 = self._safe_llm_score(data.get("score"), default=1)
         semantic_score_0_2 = float(semantic["score"]) if semantic and "score" in semantic else float(llm_score_0_2)
+        concept_coverage = self._concept_coverage(expected_concepts, candidate_answer)
+
+        # Guardrail for false-zero cases: if LLM says 0 but similarity or concept hit-rate
+        # is reasonably high, upgrade to partial credit.
+        if llm_score_0_2 == 0 and (similarity >= 0.72 or concept_coverage >= 0.5):
+            llm_score_0_2 = 1
 
         # Blend rubric score (LLM) with embedding semantic score, then scale to 0-100.
         blended_0_2 = (0.7 * float(llm_score_0_2)) + (0.3 * semantic_score_0_2)
@@ -99,6 +117,7 @@ class AnswerEvaluator:
             "weaknesses": weaknesses,
             "semantic_similarity": similarity,
             "semantic_score": semantic_score_0_2,
+            "concept_coverage": round(concept_coverage, 3),
             "llm_score": llm_score_0_2,
             "blended_score_0_2": round(blended_0_2, 3),
         }
