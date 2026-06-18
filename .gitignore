@@ -35,5 +35,3 @@ vector_store/chroma_db/
 # OS-specific
 .DS_Store
 Thumbs.db
-
-api.py

@@ -80,7 +80,10 @@ pip install -r requirements.txt
 
 ### Initializing the Vector Database
 
-The vector database must be initialized with sample interview questions before running the app:
+The vector database must be initialized before running the app.
+It now loads:
+- Questions extracted from role PDFs in `data/role_questions/` (if present).
+- Built-in default questions as fallback.
 
 ```bash
 python -m vector_store.init_vector_store
@@ -117,8 +120,10 @@ python -m http.server 5500
 ### Extensibility
 
 - **Adding new roles and questions**:
-  - Update `vector_store/init_vector_store.py` with additional `QuestionRecord` instances.
-  - Re-run the initialization script to seed the updated question set.
+  - Drop role-specific PDF files in `data/role_questions/`.
+  - Recommended structure: `data/role_questions/<Role Name>/questions.pdf`.
+  - Re-run `python -m vector_store.init_vector_store`.
+  - Optional: still add hardcoded defaults in `vector_store/init_vector_store.py`.
 - **Changing the embedding model**:
   - Set `EMBEDDING_MODEL` in the environment to any Sentence Transformers model name.
 - **Switching LLM providers**:

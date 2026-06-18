@@ -77,7 +77,7 @@ class InterviewVectorStore:
             )
             answer_documents.append(q.ideal_answer)
         embeddings = self._embed(documents)
-        self._collection.add(
+        self._collection.upsert(
             ids=ids,
             documents=documents,
             metadatas=metadatas,

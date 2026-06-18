@@ -1,12 +1,148 @@
 from __future__ import annotations
 
+import hashlib
 import os
+import re
 from typing import List
+
+import pdfplumber
 
 from .store import InterviewVectorStore, QuestionRecord
 
+ROLE_QUESTION_DIR = os.getenv("ROLE_QUESTION_DIR", "data/role_questions")
+SUPPORTED_EXTENSIONS = {".pdf"}
+QUESTION_START_PATTERN = re.compile(
+    r"^\s*(?:q(?:uestion)?\s*)?(\d{1,3})\s*[\).:\-]+\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+STOP_SECTION_PATTERN = re.compile(
+    r"^\s*(answer|answers|solution|solutions|explanation|hint|sample output)\b",
+    re.IGNORECASE,
+)
 
-def build_sample_questions() -> List[QuestionRecord]:
+
+def _extract_text_from_pdf(path: str) -> str:
+    with pdfplumber.open(path) as pdf:
+        return "\n".join((page.extract_text() or "") for page in pdf.pages)
+
+
+def _normalize_spaces(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _format_role_name(raw: str) -> str:
+    # Normalize separators and preserve common abbreviations.
+    text = re.sub(r"[_\-]+", " ", raw).strip()
+    if not text:
+        return "General Technical Candidate"
+    tokens = text.split()
+    normalized: List[str] = []
+    abbreviations = {"ml", "ai", "qa", "sde", "ui", "ux", "nlp", "devops"}
+    for token in tokens:
+        lower = token.lower()
+        if lower in abbreviations:
+            normalized.append(lower.upper())
+        elif token.isupper() and len(token) <= 5:
+            normalized.append(token)
+        else:
+            normalized.append(token.capitalize())
+    return " ".join(normalized)
+
+
+def _extract_questions_from_text(text: str) -> List[str]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    questions: List[str] = []
+    current: str | None = None
+
+    for line in lines:
+        if STOP_SECTION_PATTERN.match(line):
+            if current:
+                questions.append(_normalize_spaces(current))
+                current = None
+            continue
+
+        start_match = QUESTION_START_PATTERN.match(line)
+        if start_match:
+            if current:
+                questions.append(_normalize_spaces(current))
+            current = start_match.group(2)
+            continue
+
+        if current:
+            # Keep short continuation lines to support wrapped PDF text.
+            if len(line.split()) <= 25:
+                current = f"{current} {line}"
+            continue
+
+    if current:
+        questions.append(_normalize_spaces(current))
+
+    if questions:
+        return list(dict.fromkeys(q for q in questions if len(q.split()) >= 4))
+
+    # Fallback: if numbering is missing, use question-mark sentences.
+    fallback: List[str] = []
+    parts = re.split(r"(?<=[?])\s+", _normalize_spaces(text))
+    for part in parts:
+        candidate = _normalize_spaces(part)
+        if "?" in candidate and len(candidate.split()) >= 5:
+            fallback.append(candidate)
+    return list(dict.fromkeys(fallback))
+
+
+def _build_question_record(role: str, source_path: str, index: int, question: str) -> QuestionRecord:
+    digest = hashlib.md5(f"{role}|{source_path}|{index}|{question}".encode("utf-8")).hexdigest()[:12]
+    role_slug = re.sub(r"[^a-z0-9]+", "_", role.lower()).strip("_") or "role"
+    return QuestionRecord(
+        id=f"{role_slug}_{digest}",
+        question=question,
+        role=role,
+        difficulty="medium",
+        ideal_answer=(
+            "Provide a structured and role-relevant explanation with key trade-offs, "
+            "clear reasoning, and practical examples where applicable."
+        ),
+        expected_concepts=["problem solving", "technical fundamentals", role.lower()],
+    )
+
+
+def load_questions_from_role_pdfs(base_dir: str = ROLE_QUESTION_DIR) -> List[QuestionRecord]:
+    questions: List[QuestionRecord] = []
+    seen_pairs: set[tuple[str, str]] = set()
+
+    if not os.path.isdir(base_dir):
+        return questions
+
+    for root, _, files in os.walk(base_dir):
+        for filename in files:
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in SUPPORTED_EXTENSIONS:
+                continue
+
+            path = os.path.join(root, filename)
+            rel_dir = os.path.relpath(root, base_dir)
+            if rel_dir != ".":
+                role = _format_role_name(os.path.basename(root))
+            else:
+                role = _format_role_name(os.path.splitext(filename)[0])
+
+            try:
+                text = _extract_text_from_pdf(path)
+            except Exception:
+                continue
+
+            extracted = _extract_questions_from_text(text)
+            for idx, qtext in enumerate(extracted, start=1):
+                key = (role.lower(), qtext.lower())
+                if key in seen_pairs:
+                    continue
+                seen_pairs.add(key)
+                questions.append(_build_question_record(role, path, idx, qtext))
+
+    return questions
+
+
+def build_builtin_sample_questions() -> List[QuestionRecord]:
     """
     Seed the vector store with a small but realistic set of questions
     covering a few common technical roles. This can be extended easily.
@@ -530,12 +666,28 @@ def build_sample_questions() -> List[QuestionRecord]:
     return questions
 
 
+def build_sample_questions() -> List[QuestionRecord]:
+    """
+    Build questions from `data/role_questions` PDFs and keep built-in
+    questions as a fallback/default pool.
+    """
+    pdf_questions = load_questions_from_role_pdfs()
+    builtin_questions = build_builtin_sample_questions()
+    return pdf_questions + builtin_questions
+
+
 def main() -> None:
     os.makedirs("vector_store", exist_ok=True)
     store = InterviewVectorStore()
-    questions = build_sample_questions()
+    pdf_questions = load_questions_from_role_pdfs()
+    builtin_questions = build_builtin_sample_questions()
+    questions = pdf_questions + builtin_questions
     store.add_questions(questions)
-    print(f"Seeded vector store with {len(questions)} questions.")
+    print(
+        "Seeded vector store with "
+        f"{len(questions)} questions "
+        f"({len(pdf_questions)} from {ROLE_QUESTION_DIR}, {len(builtin_questions)} built-in)."
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
-﻿const state = {
-  apiBase: "http://localhost:8000",
+const state = {
+  apiBase: window.location.origin,
   sessionId: null,
   roles: [],
   question: null,
